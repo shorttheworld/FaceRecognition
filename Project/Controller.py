@@ -8,8 +8,8 @@ class Controller():
         #self.__det = FaceDetector()
         #self.__rec = FaceRecognizer()
         self.d = {}
-        self.d[9001] = "Chris"
-        self.validatePin(9001)
+        #self.d[9001] = "Chris"
+        #self.validatePin(9001)
         self.addPics()
         self.curPic = None
         self.result = None
@@ -76,7 +76,7 @@ class Controller():
     #adds idNum and pictureLits to dictionary
     def addPics(self):
         path = os.getcwd()
-        #path = path.strip("\Project")
+        path = path.strip("\Project")
         path = path + "\sample_faces"
        
         idNum = 100
