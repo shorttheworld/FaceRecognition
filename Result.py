@@ -1,18 +1,56 @@
+import numpy as np
+
 class Result:
 		def __init__(self):
-			self._message = "No result found."
+			self.clear()
+			self._image = None
 
-		def result(self):
-			return _message
+		def setImage(self, image):
+			self._image = image
+
+		def getImage(self):
+			return self._image
+
+		def noResult(self):
+			return self._noResult
 
 		def match(self):
-			self._message = "Match"
+			return self.match
 
 		def noMatch(self):
-			self._message = "No Match"
+			return self._noMatch
 
-		def multipleFaces(self):
-			self._message = "Multple Faces"
+		def multFaces(self):
+			return self._multFaces
 
 		def noFace(self):
-			self._message = "No Face"
+			return self._noFace
+
+		def setNoResult(self):
+			self.clear()
+			self._noResult = True
+
+		def setMatch(self):
+			self.clear()
+			self._match = True
+
+		def setNoMatch(self):
+			self.clear()
+			self._noMatch = True
+
+		def setMultFaces(self):
+			self.clear()
+			self._multFaces = True
+
+		def setNoFace(self):
+			self.clear()
+			self._noFace = True
+
+		def clear(self):
+			self._noResult = False
+			self._match = False
+			self._noMatch = False
+			self._multFaces = False
+			self._noFace = False
+
+result = Result()
