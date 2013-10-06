@@ -4,13 +4,14 @@ class Result:
 		def __init__(self):
 			self.clear()
 			self._image = None
+			self._personID = None
 
 		# Getter and setter for the image - should be numpy ndarray
 		def setImage(self, image):
 			self._image = image
 
 		def getImage(self):
-			return self.
+			return self._image
 
 		# Get the states of the results and return a boolean
 		def noResult(self):
