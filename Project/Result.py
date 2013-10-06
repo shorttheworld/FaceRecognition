@@ -5,12 +5,14 @@ class Result:
 			self.clear()
 			self._image = None
 
+		# Getter and setter for the image - should be numpy ndarray
 		def setImage(self, image):
 			self._image = image
 
 		def getImage(self):
-			return self._image
+			return self.
 
+		# Get the states of the results and return a boolean
 		def noResult(self):
 			return self._noResult
 
@@ -26,6 +28,7 @@ class Result:
 		def noFace(self):
 			return self._noFace
 
+		# Set the states of the results with a boolean
 		def setNoResult(self):
 			self.clear()
 			self._noResult = True
@@ -46,6 +49,7 @@ class Result:
 			self.clear()
 			self._noFace = True
 
+		# Set all results to false
 		def clear(self):
 			self._noResult = False
 			self._match = False
