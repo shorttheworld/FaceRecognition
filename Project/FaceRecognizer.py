@@ -67,6 +67,7 @@ class FaceRecognizer:
 
 
 c = FaceRecognizer()
+# This path is relative to my desktop right now, I will fix in the next few days
 c.train('/home/akbar/Desktop/FaceRecognition/FaceRecognition/Data/1')
 
 	
