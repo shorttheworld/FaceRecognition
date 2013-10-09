@@ -8,14 +8,54 @@ class Controller():
         #self.__det = FaceDetector()
         #self.__rec = FaceRecognizer()
         self.d = {}
-        self.d[9001] = "Chris"
-        self.validatePin(9001)
+        #self.d[9001] = "Chris"
+        #self.validatePin(9001)
         self.addPics()
         self.curPic = None
         self.result = None
+        self.pin = None
 
-    def receivePic(self, pic):
+    def receivePic(self, pic, pin):
         self.curPic = pic
+        self.pin = pin
+        if self.validatePin(self.pin) == False:
+            print("The desired pin was not found in the database. Please try again.")
+            return false
+        
+        self.result = self.validateFace()
+        '''
+        if temp.noResult():
+            print("Error: Result not valid. Please take another picture.")
+            return false
+            
+        elif temp.noFace():
+            print("No face was detected. Please reposition yourself in front of the camera")
+            return false
+
+        elif temp.noMatch():
+            print("No valid faces detected.")
+            return false
+
+        elif temp.multFaces():
+            print("Multiple faces detected. Please take a new picture.")
+            return false
+
+        elif temp.match():
+            print("Valid face detected. Checking credentials.")
+                matchResult = self.recognizeFace()
+                if matchResult.personID() == None:
+                print("No facial matches were found. Please try again.")
+                return false
+
+                elif matchResult.personID() != self.pin:
+                print("Facial match failed. Please try again.")
+                return false
+
+                elif matchResult.personID() == self.pin:
+                print("Match found. Welcome!")
+                return true
+        '''
+        return false
 
     def validatePin(self, pin):
         for key in self.d.keys():
@@ -26,36 +66,14 @@ class Controller():
         
 
     def __validateFace(self):
-        '''
-        self.result = self.__det.detectFace(curPic)
-
-        if result.noResult():
-            
-
-        else if result.noFace():
-            
-
-        else if result.match():
-            
-
-        else if result.noMatch():
-            
-
-        else if result.multFaces():
-
-        
-        '''
+        #return self.__det.detectFace(curPic)
         return false
 
     def __recognizeFace(self):
-        '''
-        
-        
-        
-        '''
+        #return self.__rec.recognizeImage(self.result)
         return false
     
-#adds idNum and pictureLits to dictionary
+    #adds idNum and pictureLits to dictionary
     def addPics(self):
         path = os.getcwd()
         path = path.strip("\Project")
