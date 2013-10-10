@@ -10,8 +10,8 @@ class GTK_Main:
 
 	def __init__(self):
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		#window.set_title("Webcam-Viewer")
-		#window.set_default_size(500, 400)
+		window.set_title("Webcam-Viewer")
+		window.set_default_size(500, 400)
 		window.connect("destroy", gtk.main_quit, "WM destroy")
 		vbox = gtk.VBox()
 		window.add(vbox)
