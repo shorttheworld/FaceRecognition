@@ -4,16 +4,11 @@ import numpy as np
 from multiprocessing import Process, Queue
 from Queue import Empty
 import cv2
-from PIL import Image
-from PIL import ImageTk
+from PIL import Image, ImageTk
 import time
 import Tkinter as tk
 
 #tkinter GUI functions----------------------------------------------------------
-def quit_(root, process):
-   process.join()
-   root.destroy()
-
 def update_image(image_label, queue):
    frame = queue.get()
    im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -27,38 +22,49 @@ def update_all(root, image_label, queue):
    update_image(image_label, queue)
    root.after(0, func=lambda: update_all(root, image_label, queue))
 
+def quit(root, process):
+   process.terminate()
+   root.destroy()
+
 #multiprocessing image processing functions-------------------------------------
 def image_capture(queue):
    vidFile = cv2.VideoCapture(0)
+
    while True:
       try:
-         flag, frame=vidFile.read()
+         flag, frame = vidFile.read() # what does flag mean?
          if flag==0:
             break
-         queue.put(frame)
+         queue.put(frame) 	# why is this loading frames onto the queue? because the thread might not
+         					# be able to display frames quickly enough?
          cv2.waitKey(20)
       except:
          continue
 
+def enter_text(entry):
+	pin = entry.get()
+	print pin
+
 if __name__ == '__main__':
-   queue = Queue()
-   print 'queue initialized...'
    root = tk.Tk()
-   print 'GUI initialized...'
+
    image_label = tk.Label(master=root)# label for the video frame
    image_label.pack()
-   print 'GUI image label initialized...'
-   p = Process(target=image_capture, args=(queue,))
+
+   #start image capture process
+   queue = Queue()
+   p = Process(target=image_capture, args=(queue,)) # why is queue passed in as a parameter like this?
    p.start()
-   print 'image capture process has started...'
-   # quit button
-   quit_button = tk.Button(master=root, text='Quit',command=lambda: quit_(root,p))
+   
+   quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root,p)) # what is lambda?
    quit_button.pack()
-   print 'quit button initialized...'
+
+   entry = tk.Entry(master=root, show='*')
+   entry.pack()
+
+   enter_button = tk.Button(master=root, text='Enter', command=lambda: enter_text(entry))
+   enter_button.pack()
+   
    # setup the update callback
-   root.after(0, func=lambda: update_all(root, image_label, queue))
-   print 'root.after was called...'
+   root.after(0, func=lambda: update_all(root, image_label, queue)) # what is "after"?
    root.mainloop()
-   print 'mainloop exit'
-   p.terminate()
-   print 'image capture process exit'
