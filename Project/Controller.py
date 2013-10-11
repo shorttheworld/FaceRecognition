@@ -73,7 +73,7 @@ class Controller():
         #return self.__rec.recognizeImage(self.result)
         return false
     
-    #adds idNum and pictureLits to dictionary
+    #adds idNum and pictureList to dictionary
     def addPics(self):
         path = os.getcwd()
         path = path.strip("\Project")
