@@ -19,27 +19,29 @@ class FaceRecognizer:
         for subdirs in os.listdir(path):
             curdir = os.listdir(os.path.join(path,subdirs))
             curpath = os.path.join(path,subdirs)
-            for imageFolder in curdir:
-                if imageFolder == 'small':
-                    imagePath = os.path.join(curpath,imageFolder)
-                    for image in os.listdir(imagePath):
-                        img = os.path.join(imagePath,image)
-                        im = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
-                        X.append(np.asarray(im,dtype=np.uint8))
-                        Y.append(c)
+            if subdirs != 'hannah':
+                print curpath
+                for image in os.listdir(curpath):
+                	imagePath = os.path.join(curpath,image)
+                	print imagePath
+                	im = cv2.imread(imagePath, cv2.IMREAD_GRAYSCALE)
+                 	X.append(np.asarray(im,dtype=np.uint8))
+                  	Y.append(c)
             self.imageTable[c] = subdirs
             c = c + 1
 
             print subdirs
-
+        pickle.dump(self.imageTable,open("map.p","wb"))
+        print "Saved pickle"
         return [X,Y]                
 
 
-
+	
     #This method will train the learner on the images given
     # by path. The additional parameter learner can train
     # a certain instance of the learner on the images
     def train(self,pathToImages, learnerID = None):
+    	
         learner = self.learner
         if (learnerID is not None):
             learner = self.learnerList[learnerID]
@@ -51,23 +53,48 @@ class FaceRecognizer:
         print type(X)
         print len(X)
         learner.train(np.asarray(X),np.asarray(y))
-        testImage  = cv2.imread('../12.pgm', cv2.IMREAD_GRAYSCALE)
-        [lab,conf] = learner.predict(np.asarray(testImage))
-        print "Found ", self.imageTable.get(lab)
-        print "Confidence " , conf
+        print "Done training"
+        learner.save("learner.xml")
+        self.testLearner(learner)
 
+        
+    def testLearner(self,learner):
+		peopleList = []
+		confList = []
+		for image in os.listdir("../victim3"):
+			imgPath = os.path.join("../victim3", image)
+			print imgPath
+			testImage = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
+			[lab, conf] = learner.predict(np.asarray(testImage))
+			peopleList.append(self.imageTable.get(lab))
+			confList.append(conf)
+		for i in range(0, len(peopleList)):
+			if(confList[i] < 3500):
+				print peopleList[i] , " " , confList[i]
+		print len(self.imageTable)
 
 
     def __init__(self):
 		self.imageTable = {}
 		self.learnerList = None
-		self.learner = cv2.createEigenFaceRecognizer()
-		if(os.path.isfile('map.p')):
-			self.imageTable = pickle.load(open('map.p','rb'))
+ 		
+		self.learner = cv2.createEigenFaceRecognizer(40,35000.0)
+		if(os.path.isfile("learner.xml")):
+			print("found learner")
+			self.learner.load("learner.xml")
+			if(os.path.isfile('map.p')):
+				self.imageTable = pickle.load(open('map.p','rb'))
+				print "Loading pickle"
+			self.testLearner(self.learner)
+		else:
+			self.train('../Data/1')
+		print self.learner.getDouble("threshold")
+# 		self.learner.set("threshold",2500.0)
+		
 
 
 c = FaceRecognizer()
 # This path is relative to my desktop right now, I will fix in the next few days
-c.train('/home/akbar/Desktop/FaceRecognition/FaceRecognition/Data/1')
+
 
 	
