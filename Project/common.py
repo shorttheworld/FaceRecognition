@@ -69,13 +69,10 @@ def mtx2rvec(R):
     return axis * np.arctan2(s, c)
 
 def draw_str(dst, (x, y), s):
-<<<<<<< HEAD
     cv2.putText(dst, s, (x+1, y+1), cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 0, 0), thickness = 2, lineType=8)#cv2.CV_AA)
     cv2.putText(dst, s, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), lineType=8)#cv2.CV_AA)
-=======
     cv2.putText(dst, s, (x+1, y+1), cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 0, 0), thickness = 2, lineType=cv2.CV_AA)
     cv2.putText(dst, s, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), lineType=cv2.CV_AA)
->>>>>>> 92e5792ca1477a5ed19e44cb9c28452cd8505b7c
 
 class Sketcher:
     def __init__(self, windowname, dests, colors_func):
