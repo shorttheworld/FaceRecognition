@@ -42,7 +42,7 @@ def image_capture(queue):
    try: video_src = video_src[0]
    except: video_src = 0
    args = dict(args)
-   cascade_fn = args.get('--cascade', "haarcascade_frontalface_alt.xml")
+   cascade_fn = args.get('--cascade', "../metadata/haarcascade_frontalface_alt.xml")
    cascade = cv2.CascadeClassifier(cascade_fn)
         
    vidFile = create_capture(video_src, fallback='synth:bg=lena.jpg:noise=0.05')
