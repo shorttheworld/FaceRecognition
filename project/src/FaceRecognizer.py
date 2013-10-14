@@ -31,7 +31,7 @@ class FaceRecognizer:
             c = c + 1
 
             print subdirs
-        pickle.dump(self.imageTable,open("map.p","wb"))
+        pickle.dump(self.imageTable,open("../metadata/map.p","wb"))
         print "Saved pickle"
         return [X,Y]                
 
@@ -54,7 +54,7 @@ class FaceRecognizer:
         print len(X)
         learner.train(np.asarray(X),np.asarray(y))
         print "Done training"
-        learner.save("learner.xml")
+        learner.save("../metadata/learner.xml")
         self.testLearner(learner)
 
         
@@ -79,11 +79,11 @@ class FaceRecognizer:
 		self.learnerList = None
  		
 		self.learner = cv2.createEigenFaceRecognizer(40,35000.0)
-		if(os.path.isfile("learner.xml")):
+		if(os.path.isfile("../metadata/learner.xml")):
 			print("found learner")
-			self.learner.load("learner.xml")
-			if(os.path.isfile('map.p')):
-				self.imageTable = pickle.load(open('map.p','rb'))
+			self.learner.load("../metadatalearner.xml")
+			if(os.path.isfile('../metadata/map.p')):
+				self.imageTable = pickle.load(open('../metadata/map.p','rb'))
 				print "Loading pickle"
 			self.testLearner(self.learner)
 		else:
