@@ -62,6 +62,9 @@ def image_capture(queue):
             if goodOrBad(frame,cascade, curr):
                curr = curr +1
                found = True
+               lf.config(bg = "Green")
+            else:
+               lf.config(bg = "Red")
          
          
          if flag==0:
@@ -80,9 +83,18 @@ def enter_text(entry):
 
 if __name__ == '__main__':
    root = tk.Tk()
+   root.geometry("800x600")
+   root.resizable(width=False, height=False)
+   root.configure(background="#EE8")
+   root.grid()
+   root.title("In Yo Face")
 
-   image_label = tk.Label(master=root)# label for the video frame
+   image_label = tk.Label(master=root, padx=0, pady=0)# label for the video frame
    image_label.pack()
+
+   global lf
+   lf = tk.LabelFrame(master=root, width = 300, height = 50, bg="Red", relief="raised", bd=10)
+   lf.pack()
 
    #start image capture process
    queue = Queue()
@@ -90,18 +102,18 @@ if __name__ == '__main__':
    #Each process takes in the function it's supposed to do and the data structure associated
    # with it. We are passing a queue here so this process can  capture images and put them in the queue
    p.start()
+
+   entry = tk.Entry(master=root, show='*', bg="White", fg="Black")
+   entry.pack()
    
-   quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root,p)) # what is lambda?
+   enter_button = tk.Button(master=root, text='Enter', command=lambda: enter_text(entry), bg="green")
+   enter_button.pack()
+
+   quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root,p), bg="red") # what is lambda?
    # Lambda is similar to writing a quick function without having to type def keyword. In this case
    # you have a lambda because the function quit() takes parameters, so we want to pass in the function
    # reference and not the evaluated value
    quit_button.pack()
-
-   entry = tk.Entry(master=root, show='*')
-   entry.pack()
-
-   enter_button = tk.Button(master=root, text='Enter', command=lambda: enter_text(entry))
-   enter_button.pack()
    
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, queue)) # what is "after"?
