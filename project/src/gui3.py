@@ -52,7 +52,8 @@ def image_capture(queue):
    while True:
 
       try:
-         flag, frame = vidFile.read() # what does flag mean?
+         flag, frame = vidFile.read() # what does flag mean? 
+         # Flag just tells you if it was able to successfully capture the image or not
          frame = frame[frame.shape[1]/2-150:frame.shape[1]/2+200, frame.shape[0]/2-50:frame.shape[0]/2+250]
 
          rects = detect(frame, cascade)
@@ -67,6 +68,8 @@ def image_capture(queue):
             break
          queue.put(frame) 	# why is this loading frames onto the queue? because the thread might not
          					# be able to display frames quickly enough?
+         #This is a producer/consumer type of problem. The queue is thread safe, one process
+         # puts things on the queue and another process removes things from ther queue.
          
       except:
          continue
@@ -84,9 +87,14 @@ if __name__ == '__main__':
    #start image capture process
    queue = Queue()
    p = Process(target=image_capture, args=(queue,)) # why is queue passed in as a parameter like this?
+   #Each process takes in the function it's supposed to do and the data structure associated
+   # with it. We are passing a queue here so this process and capture images and put them in the queue
    p.start()
    
    quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root,p)) # what is lambda?
+   # Lambda is similar to writing a quick function without having to type def keyword. In this case
+   # you have a lambda because the function quit() takes parameter, so we want to pass in the function
+   # reference
    quit_button.pack()
 
    entry = tk.Entry(master=root, show='*')
@@ -97,6 +105,9 @@ if __name__ == '__main__':
    
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, queue)) # what is "after"?
+   # After means after 0 milliseconds, to some function, in this case update_all. This
+   # will only be called once, which is why insite the update_all function there are recursive
+   # calls to keep the thread updating the images.
    root.mainloop()
 
 #----------------------------------- Saman's stuff------------
