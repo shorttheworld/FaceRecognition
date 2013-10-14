@@ -88,13 +88,13 @@ if __name__ == '__main__':
    queue = Queue()
    p = Process(target=image_capture, args=(queue,)) # why is queue passed in as a parameter like this?
    #Each process takes in the function it's supposed to do and the data structure associated
-   # with it. We are passing a queue here so this process and capture images and put them in the queue
+   # with it. We are passing a queue here so this process can  capture images and put them in the queue
    p.start()
    
    quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root,p)) # what is lambda?
    # Lambda is similar to writing a quick function without having to type def keyword. In this case
-   # you have a lambda because the function quit() takes parameter, so we want to pass in the function
-   # reference
+   # you have a lambda because the function quit() takes parameters, so we want to pass in the function
+   # reference and not the evaluated value
    quit_button.pack()
 
    entry = tk.Entry(master=root, show='*')
@@ -105,8 +105,8 @@ if __name__ == '__main__':
    
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, queue)) # what is "after"?
-   # After means after 0 milliseconds, to some function, in this case update_all. This
-   # will only be called once, which is why insite the update_all function there are recursive
+   # After means after 0 milliseconds, call some function, in this case update_all. This
+   # will only be called once, which is why inside the update_all function there are recursive
    # calls to keep the thread updating the images.
    root.mainloop()
 
