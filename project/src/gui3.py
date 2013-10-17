@@ -14,6 +14,7 @@ import cv2
 from PIL import Image, ImageTk
 import time
 import Tkinter as tk
+import tkFont
 
 #tkinter GUI functions----------------------------------------------------------
 def update_image(image_label, queue):
@@ -63,8 +64,10 @@ def image_capture(queue):
                curr = curr +1
                found = True
                lf.config(bg = "Green")
+               lf_text.config(text="Face Detected", bg="Green")
             else:
                lf.config(bg = "Red")
+               lf_text.confid(text="Searching for a face...", bg="Red")
          
          
          if flag==0:
@@ -83,18 +86,31 @@ def enter_text(entry):
 
 if __name__ == '__main__':
    root = tk.Tk()
-   root.geometry("800x600")
+   root.geometry("800x500")
    root.resizable(width=False, height=False)
    root.configure(background="#EE8")
    root.grid()
    root.title("In Yo Face")
+   print root.grid_size()
 
-   image_label = tk.Label(master=root, padx=0, pady=0)# label for the video frame
-   image_label.pack()
+   welcome_font = tkFont.Font(family='Helvetica', size=12, weight='bold')
+
+   welcome_frame = tk.LabelFrame(master=root, relief="ridge", bg="Black")
+   welcome_frame.grid(row=1, column=5, rowspan=3, columnspan=2)
+
+   welcome_label = tk.Label(master=welcome_frame, text='Welcome to the In Yo Face Authentication System!', font=welcome_font)
+   welcome_label.pack()
+
+   image_label = tk.Label(master=root)# label for the video frame
+   image_label.grid(row=1, column=1, rowspan=6, columnspan=3)
 
    global lf
-   lf = tk.LabelFrame(master=root, width = 300, height = 50, bg="Red", relief="raised", bd=10)
-   lf.pack()
+   lf = tk.LabelFrame(master=root, bg="Red", relief="raised", bd=10, width=30, height=1)
+   lf.grid(row=7, column=1)
+
+   global lf_label
+   lf_text = tk.Label(master=lf, text='Searching for a face...', bg="Red", width=35)
+   lf_text.pack()
 
    #start image capture process
    queue = Queue()
@@ -103,17 +119,29 @@ if __name__ == '__main__':
    # with it. We are passing a queue here so this process can  capture images and put them in the queue
    p.start()
 
-   entry = tk.Entry(master=root, show='*', bg="White", fg="Black")
-   entry.pack()
+   entry = tk.Entry(master=root, show='*', bg="White", fg="Black", takefocus=1, width=30)
+   entry.grid(row=7, column=5)
    
-   enter_button = tk.Button(master=root, text='Enter', command=lambda: enter_text(entry), bg="green")
-   enter_button.pack()
+   enter_button = tk.Button(master=root, text='Enter', command=lambda: enter_text(entry), bg="green", width=25, height=1)
+   enter_button.grid(row=8, column=5)
 
-   quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root,p), bg="red") # what is lambda?
+   quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root,p), bg="red", width=25, height=1) # what is lambda?
    # Lambda is similar to writing a quick function without having to type def keyword. In this case
    # you have a lambda because the function quit() takes parameters, so we want to pass in the function
    # reference and not the evaluated value
-   quit_button.pack()
+   quit_button.grid(row=9, column=5)
+   
+   '''
+   infoFrame = tk.Frame(master=root, padx=0, pady=0, height='100p', width='100p', bg="Red")
+   infoFrame.pack(anchor='e')
+   '''
+   
+   testLabel1 = tk.Label(master=root, text='Room for some user info here.', bg="#EE8")
+   testLabel1.grid(row=4, column=5)
+
+   testLabel2 = tk.Message(master=root, text='Messages could work too for stuff that\'s long enough to justify multiple lines.', bg="#EE8")
+   #testLabel2.pack(anchor='ne')
+   testLabel2.grid(row=5, column=5)
    
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, queue)) # what is "after"?
