@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# http://stackoverflow.com/questions/17073227/display-an-opencv-video-in-tkinter-using-multiprocessing
+
 import cv2
 import numpy as np
 from multiprocessing import Process, Queue
