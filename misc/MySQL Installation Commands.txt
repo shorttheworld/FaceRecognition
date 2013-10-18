@@ -1,0 +1,11 @@
+sudo apt-get install mysql-client
+sudo apt-get install mysql-server
+
+mysqladmin -u root -p create [DB_NAME]
+
+mysql -u root -p FacialRecognition 
+(password = root)
+
+CREATE TABLE person (pin INT(5), PRIMARY KEY (pin), first_name VARCHAR(35), last_name VARCHAR(35), admin bool);
+
+INSERT INTO person (pin, first_name, last_name, admin) VALUES (12345, 'Hannah', 'Lau', true)

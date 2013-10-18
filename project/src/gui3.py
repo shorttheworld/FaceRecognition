@@ -3,7 +3,7 @@
 # local modules
 from video import create_capture
 from common import clock, draw_str
-import cv2.cv as cv
+#import cv2.cv as cv
 from video import create_capture
 from goodBad import goodOrBad
 
@@ -15,6 +15,8 @@ from PIL import Image, ImageTk
 import time
 import Tkinter as tk
 import tkFont
+
+import MySQLdb
 
 #tkinter GUI functions----------------------------------------------------------
 def update_image(image_label, queue):
@@ -80,9 +82,17 @@ def image_capture(queue):
       except:
          continue
 
-def enter_text(entry):
-	pin = entry.get()
-	print pin
+def setup_db():
+   db = MySQLdb.connect(host="localhost", user="root", passwd="root", db="FacialRecognition") 
+   global cur
+   cur = db.cursor() 
+
+def get_name(pin):
+   cmd = "SELECT first_name, last_name FROM person WHERE pin=" + str(pin)
+   cur.execute(cmd)
+   person = cur.fetchone()
+
+   print person[0] + " " + person[1]
 
 if __name__ == '__main__':
    root = tk.Tk()
@@ -94,24 +104,25 @@ if __name__ == '__main__':
    print root.grid_size()
 
    welcome_font = tkFont.Font(family='Helvetica', size=12, weight='bold')
-
+   
    welcome_frame = tk.LabelFrame(master=root, relief="ridge", bg="Black")
    welcome_frame.grid(row=1, column=5, rowspan=3, columnspan=2)
-
+   
    welcome_label = tk.Label(master=welcome_frame, text='Welcome to the In Yo Face Authentication System!', font=welcome_font)
    welcome_label.pack()
-
+   
    image_label = tk.Label(master=root)# label for the video frame
    image_label.grid(row=1, column=1, rowspan=6, columnspan=3)
 
+   
    global lf
    lf = tk.LabelFrame(master=root, bg="Red", relief="raised", bd=10, width=30, height=1)
    lf.grid(row=7, column=1)
-
+   
    global lf_label
    lf_text = tk.Label(master=lf, text='Searching for a face...', bg="Red", width=35)
    lf_text.pack()
-
+   
    #start image capture process
    queue = Queue()
    p = Process(target=image_capture, args=(queue,)) # why is queue passed in as a parameter like this?
@@ -122,7 +133,7 @@ if __name__ == '__main__':
    entry = tk.Entry(master=root, show='*', bg="White", fg="Black", takefocus=1, width=30)
    entry.grid(row=7, column=5)
    
-   enter_button = tk.Button(master=root, text='Enter', command=lambda: enter_text(entry), bg="green", width=25, height=1)
+   enter_button = tk.Button(master=root, text='Enter', command=lambda: get_name(pin), bg="green", width=25, height=1)
    enter_button.grid(row=8, column=5)
 
    quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root,p), bg="red", width=25, height=1) # what is lambda?
@@ -143,6 +154,8 @@ if __name__ == '__main__':
    #testLabel2.pack(anchor='ne')
    testLabel2.grid(row=5, column=5)
    
+   setup_db()
+
    # setup the update callback
    root.after(0, func=lambda: update_all(root, image_label, queue)) # what is "after"?
    # After means after 0 milliseconds, call some function, in this case update_all. This
