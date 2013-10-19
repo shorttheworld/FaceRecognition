@@ -59,6 +59,7 @@ def image_capture(queue):
    
          if rects != []:
             count = count + 1
+            #Need to fix this method
             #detected_face()
 
 def slice_frame(frame):
@@ -89,6 +90,10 @@ def detect(img, cascade, count):
 
    return rects   
 
+def detected_face():
+   #This method should change the color of the label frame (lf) and label (lf_label)
+   #from red to green. It should also update the text of the label (lf_label)
+   
 # Database functions ------------------------------------------------------------
 def setup_db():
    db = MySQLdb.connect(host="localhost", user="root", passwd="root", db="FacialRecognition") 
@@ -136,7 +141,7 @@ def configure_labels(root):
    lf_label.grid(row=3, column=1)
 
 def configure_buttons(root, p):
-   entry = tk.Entry(master=root, show='*', bg="White", fg="Black", takefocus=1, width=30)
+   entry = tk.Entry(master=root, show='*', bg="white", fg="black", takefocus=1, width=30)
    entry.grid(row=4, column=1, sticky="n")
    
    enter_button = tk.Button(master=root, text='Enter', command=lambda: get_name(pin), bg="green", width=25, height=1)
