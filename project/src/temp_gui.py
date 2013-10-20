@@ -193,8 +193,14 @@ def configure_buttons(root, p, queue):
    quit_button.grid(row=4, column=1, sticky="s")
 
 def configure_folders():
-   sh('mkdir victim')
-   sh('rm victim/*')
+   if(platform.system() == 'Windows'):
+        curPath = os.getcwd()
+        if(('victim' in os.listdir(curPath)) == True):
+            os.system('rmdir victim /s /q')
+        os.system('mkdir victim')
+   else:
+      sh('mkdir victim')
+      sh('rm victim/*')
 
 # Bash commands -----------------------------------------------------------------
 def sh(script):
