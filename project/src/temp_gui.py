@@ -3,6 +3,7 @@
 # Hannah's vesion of the gui
 
 import os
+import shutil
 
 import cv2
 import numpy as np
@@ -75,7 +76,7 @@ def start_detection(queue, lf, lf_label):
    fileList = os.listdir(os.getcwd() + '/victim/')
    num_pics = len(fileList)
 
-   while (num_pics < 25):
+   while (num_pics < 50):
       frame = queue.get()
 
       gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -109,10 +110,10 @@ def detected_face(lf, lf_label, num_pics):
    if (color != 'red' and num_pics == 0):
       lf.config(bg="red")
       lf_label.config(bg="red", text='Searching for face...')
-   elif (color != 'yellow' and 0 < num_pics and num_pics < 24):
+   elif (color != 'yellow' and 0 < num_pics and num_pics < 49):
       lf.config(bg="yellow")
       lf_label.config(bg="yellow", text='Matching face.')
-   elif (color != 'green' and num_pics == 24):
+   elif (color != 'green' and num_pics == 49):
       #name = db.get_name(db, '12345')
       name = recognize_face()
       lf.config(bg="green")
@@ -188,21 +189,9 @@ def configure_buttons(root, p, queue):
 
 def configure_folders():
    curPath = os.getcwd()
-    if(('victim' in os.listdir(curPath)) == True):
-        shutil.rmtree('victim')
-    os.mkdir('victim')
-
-
-   '''
-   if(platform.system() == 'Windows'):
-        curPath = os.getcwd()
-        if(('victim' in os.listdir(curPath)) == True):
-            os.system('rmdir victim /s /q')
-        os.system('mkdir victim')
-   else:
-      sh('mkdir victim')
-      sh('rm victim/*')
-   '''
+   if(('victim' in os.listdir(curPath)) == True):
+      shutil.rmtree('victim')
+   os.mkdir('victim')
 
 # Bash commands -----------------------------------------------------------------
 def sh(script):
