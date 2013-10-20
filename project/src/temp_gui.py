@@ -17,7 +17,7 @@ import tkFont
 from video import create_capture
 import sys, getopt
 
-import FaceRecognizer as rec
+import FaceRecognizer
 
 # tkinter GUI functions ---------------------------------------------------------
 def update_image(image_label, queue):
@@ -67,6 +67,8 @@ def slice_frame(frame):
 
 # Face detection ----------------------------------------------------------------
 def start_detection(queue, lf, lf_label):
+   configure_folders()
+
    cascade_fn = "../metadata/haarcascade_frontalface_alt.xml"
    cascade = cv2.CascadeClassifier(cascade_fn)
    
@@ -97,7 +99,7 @@ def detect_face(img, cascade, count):
       crop_img = img[(rects[0][1]-20):(rects[0][1] + 204), (rects[0][0]-5):(rects[0][0]+179)]
       crop_img = cv2.resize(crop_img,(92,112))
       
-      cv2.imwrite("victim/" + str(count) + ".jpg" , crop_img)
+      cv2.imwrite("victim/" + str(count) + ".pgm" , crop_img)
 
    return rects   
 
@@ -112,19 +114,14 @@ def detected_face(lf, lf_label, num_pics):
       lf_label.config(bg="yellow", text='Matching face.')
    elif (color != 'green' and num_pics == 24):
       #name = db.get_name(db, '12345')
-      print 'enter'
       name = recognize_face()
-      print 'exit'
       lf.config(bg="green")
       lf_label.config(bg="green", text='Detected: ' + name)
       # call Saman
 
 def recognize_face():
-   print '1'
-   recognizer = rec.setup()
-   print '2'
+   recognizer = FaceRecognizer.FaceRecognizer()
    name = recognizer.result()
-   print '3'
    return name
       
 # Database functions ------------------------------------------------------------
@@ -155,7 +152,7 @@ def configure_main_window(root):
 def configure_welcome_banner(root):
    welcome_font = tkFont.Font(family='Helvetica', size=12, weight='bold')
    
-   welcome_frame = tk.LabelFrame(master=root, relief="ridge", bg="Black")
+   welcome_frame = tk.LabelFrame(master=root, relief="ridge", bg="black")
    welcome_frame.grid(row=0, column=1, columnspan=2)
    
    welcome_message = 'Welcome to the In Yo Face Authentication System!'
@@ -163,15 +160,12 @@ def configure_welcome_banner(root):
    welcome_label.grid(row=0, column=1, columnspan=2)
 
 def configure_labels(root):
-   color = tk.StringVar()
-   color.set("red")
-
    global lf
-   lf = tk.LabelFrame(master=root, bg=color.get(), bd=10, width=30, height=1)
+   lf = tk.LabelFrame(master=root, bg="red", bd=10, width=30, height=1)
    lf.grid(row=3, column=1)
 
    global lf_label
-   lf_label = tk.Label(master=lf, text='Enter a password.', bg=color.get(), width=35)
+   lf_label = tk.Label(master=lf, text='Enter a password.', bg="red", width=35)
    lf_label.grid(row=3, column=1)
 
 def configure_image_window(root, queue):
