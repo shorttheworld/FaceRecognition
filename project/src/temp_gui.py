@@ -17,6 +17,8 @@ import tkFont
 from video import create_capture
 import sys, getopt
 
+import FaceRecognizer as rec
+
 # tkinter GUI functions ---------------------------------------------------------
 def update_image(image_label, queue):
    frame = queue.get()
@@ -67,9 +69,6 @@ def slice_frame(frame):
 def start_detection(queue, lf, lf_label):
    cascade_fn = "../metadata/haarcascade_frontalface_alt.xml"
    cascade = cv2.CascadeClassifier(cascade_fn)
-
-   sh('mkdir victim')
-   sh('rm victim/*')
    
    fileList = os.listdir(os.getcwd() + '/victim/')
    num_pics = len(fileList)
@@ -113,10 +112,20 @@ def detected_face(lf, lf_label, num_pics):
       lf_label.config(bg="yellow", text='Matching face.')
    elif (color != 'green' and num_pics == 24):
       #name = db.get_name(db, '12345')
-      name = 'Hannah'
+      print 'enter'
+      name = recognize_face()
+      print 'exit'
       lf.config(bg="green")
       lf_label.config(bg="green", text='Detected: ' + name)
       # call Saman
+
+def recognize_face():
+   print '1'
+   recognizer = rec.setup()
+   print '2'
+   name = recognizer.result()
+   print '3'
+   return name
       
 # Database functions ------------------------------------------------------------
 def setup_db():
@@ -183,6 +192,10 @@ def configure_buttons(root, p, queue):
    quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root, p), bg="red", width=25, height=1)
    quit_button.grid(row=4, column=1, sticky="s")
 
+def configure_folders():
+   sh('mkdir victim')
+   sh('rm victim/*')
+
 # Bash commands -----------------------------------------------------------------
 def sh(script):
    os.system("bash -c '%s'" % script)
@@ -201,6 +214,7 @@ if __name__ == '__main__':
    configure_labels(root)
    configure_buttons(root, p, queue)
    configure_image_window(root, queue)
+   configure_folders()
    
    p.start()
    root.mainloop()
