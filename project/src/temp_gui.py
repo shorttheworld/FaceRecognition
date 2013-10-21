@@ -67,7 +67,7 @@ def slice_frame(frame):
    return (dim_b, dim_t, dim_l, dim_r)
 
 # Face detection ----------------------------------------------------------------
-def start_detection(queue, lf, lf_label):
+def start_detection(root, queue, image_label, lf, lf_label):
    configure_folders()
 
    cascade_fn = "../metadata/haarcascade_frontalface_alt.xml"
@@ -79,15 +79,25 @@ def start_detection(queue, lf, lf_label):
    while (num_pics < 50):
       frame = queue.get()
 
+      update_video(frame, image_label)
+      
       gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
       gray = cv2.equalizeHist(gray)
 
       rects = detect_face(gray, cascade, num_pics)
 
-      detected_face(lf, lf_label, num_pics)
+      detected_face(root, image_label, lf, lf_label, num_pics)
 
       fileList = os.listdir(os.getcwd() + '/victim/')
       num_pics = len(fileList)
+
+def update_video(frame, image_label):
+   im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+   a = Image.fromarray(im)
+   b = ImageTk.PhotoImage(image=a)
+   image_label.configure(image=b)
+   image_label._image_cache = b  # avoid garbage collection
+   root.update()
 
 def detect_face(img, cascade, count):
    rects = cascade.detectMultiScale(img, scaleFactor=1.3, minNeighbors=4, 
@@ -104,20 +114,25 @@ def detect_face(img, cascade, count):
 
    return rects   
 
-def detected_face(lf, lf_label, num_pics):
+def detected_face(root, image_label, lf, lf_label, num_pics):
    color = lf['bg']
+
+   print num_pics
 
    if (color != 'red' and num_pics == 0):
       lf.config(bg="red")
       lf_label.config(bg="red", text='Searching for face...')
+      root.update()
    elif (color != 'yellow' and 0 < num_pics and num_pics < 49):
       lf.config(bg="yellow")
       lf_label.config(bg="yellow", text='Matching face.')
+      root.update()
    elif (color != 'green' and num_pics == 49):
       #name = db.get_name(db, '12345')
       name = recognize_face()
       lf.config(bg="green")
       lf_label.config(bg="green", text='Detected: ' + name)
+      root.update()
       # call Saman
 
 def recognize_face():
@@ -170,6 +185,7 @@ def configure_labels(root):
    lf_label.grid(row=3, column=1)
 
 def configure_image_window(root, queue):
+   global image_label
    image_label = tk.Label(master=root)
    image_label.grid(row=3, column=0, rowspan=3)
 
@@ -180,8 +196,8 @@ def configure_buttons(root, p, queue):
    entry = tk.Entry(master=root, show='*', bg="white", fg="black", takefocus=1, width=30)
    entry.grid(row=4, column=1, sticky="n")
    
-   enter_button = tk.Button(master=root, text='Enter', command=lambda: start_detection(queue, lf, lf_label), 
-      bg="green", width=25, height=1)
+   enter_button = tk.Button(master=root, text='Enter', command=lambda: 
+      start_detection(root, queue, image_label, lf, lf_label), bg="green", width=25, height=1)
    enter_button.grid(row=4, column=1)
 
    quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root, p), bg="red", width=25, height=1)
