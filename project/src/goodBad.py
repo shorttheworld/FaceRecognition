@@ -16,4 +16,4 @@ def box(rects, img, num):
     if len(crop_img) == 224 and len(crop_img[0]) == 184:
         newX, newY = crop_img.shape[1]/2, crop_img.shape[0]/2
         crop_img = cv2.resize(crop_img,(newX,newY))
-        cv2.imwrite("victim/"+str(num)+".jpg" , crop_img)
+        cv2.imwrite("victim/"+str(num)+".pgm" , crop_img)

@@ -50,7 +50,7 @@ def video_feed(queue):
 def crop_frame(frame):
    height = 350
    width = 300
-   x_offset = 100
+   x_offset = 90
    y_offset = -10
 
    dim_l = frame.shape[0]/2 - width/2 + x_offset
@@ -71,7 +71,7 @@ def start_detection(queue, image_label, lf, lf_label):
    
    max_capture_attempts = 50
    num_pics_required = 30
-
+   configure_folders()
    for i in range (0, max_capture_attempts):
       frame = queue.get()
 
@@ -85,8 +85,8 @@ def start_detection(queue, image_label, lf, lf_label):
          break;
 
 def detect_face(frame, cascade):
-   gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-   img = cv2.equalizeHist(gray)
+   img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+   #img = cv2.equalizeHist(gray)
 
    # detectMultiScale is causing the video to slow down
    rects = cascade.detectMultiScale(img, scaleFactor=1.3, minNeighbors=4, 
@@ -95,9 +95,11 @@ def detect_face(frame, cascade):
    if len(rects) != 0:
       # Can someone clean this line up and verify that I didn't mess it up? It's a bit hacky
       crop_img = img[(rects[0][1]-20):(rects[0][1] + 204), (rects[0][0]-5):(rects[0][0]+179)]
-      crop_img = cv2.resize(crop_img,(92,112))
-      
-      cv2.imwrite("victim/" + str(num_pics_captured()) + ".pgm" , crop_img)  
+
+      #Hannah: :D this if statement is required, It checks to see if the image dimensions are correct :D
+      if len(crop_img) == 224 and len(crop_img[0]) == 184:
+         crop_img = cv2.resize(crop_img,(92,112))
+         cv2.imwrite("victim/" + str(num_pics_captured()) + ".pgm" , crop_img)  
 
 def update_labels(lf, lf_label, num_pics_required):
    num_pics = num_pics_captured()
@@ -118,9 +120,11 @@ def update_labels(lf, lf_label, num_pics_required):
 
 def recognize_face():
    # Saman: add face recognizer here
+   # Hannah: Done!
+   
    recognizer = FaceRecognizer.FaceRecognizer()
-   #name = recognizer.result()
-   name = ":D"
+   name = recognizer.result()
+   #name = ":D"
 
    return name
 
@@ -150,9 +154,9 @@ def sanitize_input(input):
 
 # Configure GUI components ------------------------------------------------------
 def configure_main_window():
-   root.geometry("800x500")
+   root.geometry("700x400")
    root.resizable(width=False, height=False)
-   root.configure(background="#EE8")
+   root.configure(background="#FFF")
    root.title("In Yo Face")
 
 def configure_welcome_banner():

@@ -35,13 +35,13 @@ class FaceRecognizer:
         for subdirs in os.listdir(path):
             curdir = os.listdir(os.path.join(path,subdirs))
             curpath = os.path.join(path,subdirs)
-            if subdirs != 'hannah':
-                for image in os.listdir(curpath):
-                    imagePath = os.path.join(curpath,image)
-                    print imagePath
-                    im = cv2.imread(imagePath, cv2.IMREAD_GRAYSCALE)
-                    X.append(np.asarray(im,dtype=np.uint8))
-                    Y.append(c)
+            #if subdirs != 'hannah':
+            for image in os.listdir(curpath):
+                imagePath = os.path.join(curpath,image)
+                print imagePath
+                im = cv2.imread(imagePath, cv2.IMREAD_GRAYSCALE)
+                X.append(np.asarray(im,dtype=np.uint8))
+                Y.append(c)
             self.imageTable[c] = subdirs
             c = c + 1
 
@@ -76,7 +76,7 @@ class FaceRecognizer:
         confList = []
 
         recognizedPeople={}
-        
+            
         for image in os.listdir("victim/"):
                 imgPath = os.path.join("victim/", image)
                 testImage = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
@@ -98,3 +98,6 @@ class FaceRecognizer:
 
     def result(self):
         return self.retVal
+
+c = FaceRecognizer()
+print c.result()
