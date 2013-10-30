@@ -6,8 +6,10 @@ from PIL import Image, ImageTk
 
 import cv2
 import numpy as np
+from Queue import Empty
 
-from multiprocessing import Process, Queue
+#import multiprocessing as mp
+from multiprocessing import Process, Queue, Pipe
 from video import create_capture
 import time
 
@@ -26,16 +28,16 @@ def update_all(image_label, queue):
    update_video_feed(image_label, frame)
    root.after(0, func=lambda: update_all(image_label, queue))
 
-def video_feed(queue):
-   print "Creating Video Feed"
+def video_feed(queue, child_conn):
+   child_conn.send("Creating Video Feed")
    video = create_capture(0)
    success, frame = video.read()
 
    while success != 0:
-      print "Read unsuccessful"
-      success, frame = video.read()
+      
       frame = crop_frame(frame)   
-      queue.put(frame) 
+      queue.put(frame)
+      success, frame = video.read()
 
 def crop_frame(frame):
    height = 350
@@ -63,7 +65,7 @@ def snap_pic(threshold):
         return False
 
 def configure_main_window():
-    root.geometry("800x500")
+    root.geometry("700x400")
     root.resizable(width=False, height=False)
     root.configure(background="#EE8")
     root.title("In Yo Face Admin Tools")
@@ -92,8 +94,6 @@ def configure_image_window(queue):
    image_label.grid(row=3, column=0, rowspan=3)
 
    root.after(0, func=lambda: update_all(image_label, queue))
-
-   return image_label
 
 def configure_buttons(fn_entry, ln_entry, pw_entry):
     continue_btn = tk.Button(master=root, command=lambda:check_fields(fn_entry, ln_entry, pw_entry), background="Green", width=15, text="Continue")
@@ -135,8 +135,8 @@ def sanitize_input(input):
 if __name__== '__main__':
     root = tk.Tk()
     queue = Queue()
-
-    p = Process(target=video_feed, args=(queue,))
+    parent_conn, child_conn=Pipe()
+    p = Process(target=video_feed, args=(queue, child_conn))
     
     configure_main_window()
     (fn_entry, ln_entry, pw_entry) = configure_fields()
@@ -144,4 +144,5 @@ if __name__== '__main__':
     configure_buttons(fn_entry, ln_entry, pw_entry)
 
     p.start()
+    print parent_conn.recv()
     root.mainloop()

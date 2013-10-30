@@ -43,9 +43,9 @@ def video_feed(queue):
    success, frame = video.read()
 
    while success != 0:
-      success, frame = video.read()
       frame = crop_frame(frame)   
-      queue.put(frame) 
+      queue.put(frame)
+      success, frame = video.read()
 
 def crop_frame(frame):
    height = 350
