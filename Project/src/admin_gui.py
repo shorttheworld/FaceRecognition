@@ -8,8 +8,11 @@ import cv2
 import numpy as np
 
 from multiprocessing import Process, Queue
+from video import create_capture
+import time
 
 def update_video_feed(image_label, frame):
+   print "update video feed"
    img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
    a = Image.fromarray(img)
    b = ImageTk.PhotoImage(image=a)
@@ -18,15 +21,18 @@ def update_video_feed(image_label, frame):
    root.update()
 
 def update_all(image_label, queue):
+   print "update all"
    frame = queue.get()
    update_video_feed(image_label, frame)
    root.after(0, func=lambda: update_all(image_label, queue))
 
 def video_feed(queue):
+   print "Creating Video Feed"
    video = create_capture(0)
    success, frame = video.read()
 
    while success != 0:
+      print "Read unsuccessful"
       success, frame = video.read()
       frame = crop_frame(frame)   
       queue.put(frame) 
@@ -81,6 +87,7 @@ def configure_fields():
     return (fn_entry, ln_entry, pw_entry)
 
 def configure_image_window(queue):
+   print "configure image window"
    image_label = tk.Label(master=root)
    image_label.grid(row=3, column=0, rowspan=3)
 
@@ -133,7 +140,7 @@ if __name__== '__main__':
     
     configure_main_window()
     (fn_entry, ln_entry, pw_entry) = configure_fields()
-    #configure_image_window(queue)
+    configure_image_window(queue)
     configure_buttons(fn_entry, ln_entry, pw_entry)
 
     p.start()
