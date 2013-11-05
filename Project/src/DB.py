@@ -42,7 +42,6 @@ class DB:
 
         def deleteUser(self, pw):
                 sql="DELETE FROM user WHERE PASSWORD='" + pw +"'"
-                print sql
                 self.cursor.execute(sql)
                 self.db.commit()
         

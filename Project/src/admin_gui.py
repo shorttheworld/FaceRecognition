@@ -54,8 +54,9 @@ def crop_frame(frame):
 
 def snap_pics(threshold, queue, pw):
     loc = os.getcwd()
-    loc = loc.strip("\src")
-    loc += "\data"
+    loc = loc.strip('\\src')
+    loc = loc + '\\data\\'
+    loc = loc + str(pw)
     print loc
     
     cur=len(os.listdir(loc)) #this will access the file system where the pictures are and find how
@@ -96,6 +97,9 @@ def configure_image_window(queue):
    image_label = tk.Label(master=root)
    image_label.grid(row=3, column=0, rowspan=5)
 
+   capture_btn = tk.Button(master=root, command=lambda:snap_pics(12, queue, pw_entry), background="#7777FF", text="Take a picture!")
+   capture_btn.grid(row=9, column=0)
+
    root.after(0, func=lambda: update_all(image_label, queue))
 
 def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue):
@@ -110,10 +114,6 @@ def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue):
    
     quit_btn = tk.Button(master=root, command=lambda:quit(root, p), background="Red", width=15, text="Quit")
     quit_btn.grid(row=7, column=5)
-
-    capture_btn = tk.Button(master=root, command=lambda:snap_pics(12, queue, pw_entry), background="#7777FF", text="Take a picture!")
-    capture_btn.grid(row=9, column=0)
-    
 
 def db_interface(fn_entry, ln_entry, pw_entry, flag, db):#Need to add DB as a param
     err_label = tk.Message(master=root, bg="#EE8")
