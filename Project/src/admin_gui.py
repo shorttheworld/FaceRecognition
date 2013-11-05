@@ -8,13 +8,13 @@ import cv2
 import numpy as np
 from Queue import Empty
 
-#import multiprocessing as mp
-from multiprocessing import Process, Queue, Pipe
+from multiprocessing import Process, Queue
 from video import create_capture
 import time
+import DB
+import os
 
 def update_video_feed(image_label, frame):
-   print "update video feed"
    img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
    a = Image.fromarray(img)
    b = ImageTk.PhotoImage(image=a)
@@ -23,13 +23,11 @@ def update_video_feed(image_label, frame):
    root.update()
 
 def update_all(image_label, queue):
-   print "update all"
    frame = queue.get()
    update_video_feed(image_label, frame)
    root.after(0, func=lambda: update_all(image_label, queue))
 
-def video_feed(queue, child_conn):
-   child_conn.send("Creating Video Feed")
+def video_feed(queue):
    video = create_capture(0)
    success, frame = video.read()
 
@@ -54,9 +52,15 @@ def crop_frame(frame):
 
    return frame
 
-def snap_pic(threshold):
-    cur=0 #this will access the file system where the pictures are and find how
+def snap_pics(threshold, queue, pw):
+    loc = os.getcwd()
+    loc = loc.strip("\src")
+    loc += "\data"
+    print loc
+    
+    cur=len(os.listdir(loc)) #this will access the file system where the pictures are and find how
     #many have been taken
+    print cur
     if(cur<threshold):
         #need help with live feed capture here: basically need to take a photo
         #and store it elsewhere in the file system until we have enough.
@@ -89,60 +93,66 @@ def configure_fields():
     return (fn_entry, ln_entry, pw_entry)
 
 def configure_image_window(queue):
-   print "configure image window"
    image_label = tk.Label(master=root)
-   image_label.grid(row=3, column=0, rowspan=3)
+   image_label.grid(row=3, column=0, rowspan=5)
 
    root.after(0, func=lambda: update_all(image_label, queue))
 
-def configure_buttons(fn_entry, ln_entry, pw_entry):
-    continue_btn = tk.Button(master=root, command=lambda:check_fields(fn_entry, ln_entry, pw_entry), background="Green", width=15, text="Continue")
-    continue_btn.grid(row=6, column=4,)
+def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue):
+    adduser_btn = tk.Button(master=root, command=lambda:db_interface(fn_entry, ln_entry, pw_entry, 0, db), background="Green", width=15, text="Add User")
+    adduser_btn.grid(row=6, column=4)
 
+    addadmin_btn = tk.Button(master=root, command=lambda:db_interface(fn_entry, ln_entry, pw_entry, 1, db), background="#4444FF", width=15, text="Add Admin")
+    addadmin_btn.grid(row=7, column=4)
+
+    delete_btn = tk.Button(master=root, command=lambda:db_interface(fn_entry, ln_entry, pw_entry, 2, db), background="Orange", width=15, text="Delete User")
+    delete_btn.grid(row=6, column=5)
+   
     quit_btn = tk.Button(master=root, command=lambda:quit(root, p), background="Red", width=15, text="Quit")
-    quit_btn.grid(row=6, column=5,)
+    quit_btn.grid(row=7, column=5)
 
-    capture_btn = tk.Button(master=root, command=lambda:snap_pic(12), background="#7777FF", text="Take a picture!")
-    capture_btn.grid(row=7, column=0)
+    capture_btn = tk.Button(master=root, command=lambda:snap_pics(12, queue, pw_entry), background="#7777FF", text="Take a picture!")
+    capture_btn.grid(row=9, column=0)
     
 
-def check_fields(fn_entry, ln_entry, pw_entry):
-    err_label = tk.Label(master=root, bg="#EE8")
-    err_label.grid(row=7, column=4)
-    if (fn_entry.get() == ''):
+def db_interface(fn_entry, ln_entry, pw_entry, flag, db):#Need to add DB as a param
+    err_label = tk.Message(master=root, bg="#EE8")
+    err_label.grid(row=4, column=5)
+    if (fn_entry.get() == '' or sanitize_input(fn_entry.get) == False):
         err_label.configure(text="Please enter a valid first name")
         return False
-    elif (ln_entry.get() == ''):
+    elif (ln_entry.get() == '' or sanitize_input(ln_entry.get) == False):
         err_label.configure(text="Please enter a valid last name")
         return False
-    elif (pw_entry.get() == ''):
-        err_label.configure(text="Please enter a valid password")
-        return False
-    elif (sanitize_input(pw_entry.get) == False):
+    elif (pw_entry.get() == '' or sanitize_input(pw_entry.get) == False):
         err_label.configure(text="Please enter a valid password")
         return False
     else:
-        err_label.configure(text='')
-        return (fn_entry, ln_entry, pw_entry)
+        err_label.grid_remove()#Need to figure out how to delete message better
+        if(flag == 0):
+            db.addUser(fn_entry.get(), ln_entry.get(), pw_entry.get())
+        elif(flag == 1):
+            db.addAdmin(fn_entry.get(), ln_entry.get(), pw_entry.get())
+        elif(flag == 2):
+            db.deleteUser(pw_entry.get())
 
 def quit(root, process):
    process.terminate()
    root.destroy()
 
-def sanitize_input(input):
+def sanitize_input(entry):
    return True
 
 if __name__== '__main__':
     root = tk.Tk()
     queue = Queue()
-    parent_conn, child_conn=Pipe()
-    p = Process(target=video_feed, args=(queue, child_conn))
+    p = Process(target=video_feed, args=(queue,))
     
     configure_main_window()
     (fn_entry, ln_entry, pw_entry) = configure_fields()
     configure_image_window(queue)
-    configure_buttons(fn_entry, ln_entry, pw_entry)
+    db = DB.DB()
+    configure_buttons(fn_entry, ln_entry, pw_entry, db, queue)
 
     p.start()
-    print parent_conn.recv()
     root.mainloop()
