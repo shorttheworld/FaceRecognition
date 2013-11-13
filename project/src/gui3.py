@@ -20,6 +20,9 @@ import MySQLdb
 
 #tkinter GUI functions----------------------------------------------------------
 def update_image(image_label, queue):
+   '''
+   Updates the image label containing the video feed.
+   '''
    frame = queue.get()
    # print type(frame)
    im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -30,15 +33,24 @@ def update_image(image_label, queue):
    root.update()
 
 def update_all(root, image_label, queue):
+   '''
+   Recursively updates the entire GUI after each frame.
+   '''
    update_image(image_label, queue)
    root.after(0, func=lambda: update_all(root, image_label, queue))
 
 def quit(root, process):
+   '''
+   Kills the GUI and the related video feed process.
+   '''
    process.terminate()
    root.destroy()
 
 #multiprocessing image processing functions-------------------------------------
 def image_capture(queue):
+   '''
+   Attempts to detect a face in the video feed, and adds a frame to the queue.
+   '''
    import sys, getopt
 
    args, video_src = getopt.getopt(sys.argv[1:], '', ['cascade=', 'nested-cascade='])
@@ -83,11 +95,17 @@ def image_capture(queue):
          continue
 
 def setup_db():
+   '''
+   Establishes a connection to the locally hosted database for user authentication.
+   '''
    db = MySQLdb.connect(host="localhost", user="root", passwd="root", db="FacialRecognition") 
    global cur
    cur = db.cursor() 
 
 def get_name(pin):
+   '''
+   Retreives a name from the database corresponding to the password the user entered.
+   '''
    cmd = "SELECT first_name, last_name FROM person WHERE pin=" + str(pin)
    cur.execute(cmd)
    person = cur.fetchone()
@@ -95,6 +113,9 @@ def get_name(pin):
    print person[0] + " " + person[1]
 
 if __name__ == '__main__':
+   '''
+   Main method. 
+   '''
    root = tk.Tk()
    root.geometry("800x500")
    root.resizable(width=False, height=False)

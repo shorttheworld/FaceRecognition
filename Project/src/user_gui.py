@@ -21,6 +21,9 @@ import FaceRecognizer
 
 # tkinter GUI functions ---------------------------------------------------------
 def update_video_feed(image_label, frame):
+   '''
+   Updates the image label containing the video feed.
+   '''
    img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
    a = Image.fromarray(img)
    b = ImageTk.PhotoImage(image=a)
@@ -29,16 +32,25 @@ def update_video_feed(image_label, frame):
    root.update()
 
 def update_all(image_label, queue):
+   '''
+   Recursively updates the entire GUI after each frame.
+   '''
    frame = queue.get()
    update_video_feed(image_label, frame)
    root.after(0, func=lambda: update_all(image_label, queue))
 
 def quit(root, process):
+   '''
+   Kills the GUI and the related video feed process.
+   '''
    process.terminate()
    root.destroy()
 
 # Multiprocessing image processing functions ------------------------------------
 def video_feed(queue):
+   '''
+   Reads from a video capture and puts a frame in the queue.
+   '''
    video = create_capture(0)
    success, frame = video.read()
 
@@ -48,6 +60,9 @@ def video_feed(queue):
       success, frame = video.read()
 
 def crop_frame(frame):
+   '''
+   Crops the video frame to a standard size.
+   '''
    height = 350
    width = 300
    x_offset = 90
@@ -64,6 +79,9 @@ def crop_frame(frame):
 
 # Face detection ----------------------------------------------------------------
 def start_detection(queue, image_label, lf, lf_label):
+   '''
+   Runs the detection algorithm and grabs multiple frames for the recognizer to compare.
+   '''
    configure_folders()
 
    cascade_fn = "../metadata/haarcascade_frontalface_alt.xml"
@@ -85,6 +103,9 @@ def start_detection(queue, image_label, lf, lf_label):
          break;
 
 def detect_face(frame, cascade):
+   '''
+   Attempts to detect a face in the video feed.
+   '''
    img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
    #img = cv2.equalizeHist(gray)
 
@@ -102,6 +123,9 @@ def detect_face(frame, cascade):
          cv2.imwrite("victim/" + str(num_pics_captured()) + ".pgm" , crop_img)  
 
 def update_labels(lf, lf_label, num_pics_required):
+   '''
+   Updates the labels to remain current with the face detection.
+   '''
    num_pics = num_pics_captured()
    lf_color = lf['bg']
 
@@ -119,6 +143,9 @@ def update_labels(lf, lf_label, num_pics_required):
       root.update()
 
 def recognize_face():
+   '''
+   Runs the face recognition algorithm on the appropriate frames.
+   '''
    # Saman: add face recognizer here
    # Hannah: Done!
    
@@ -129,6 +156,9 @@ def recognize_face():
    return name
 
 def num_pics_captured():
+   '''
+   Tracks the number of pictures captured for the current subject.
+   '''
    fileList = os.listdir(os.getcwd() + '/victim/')
    num_pics = len(fileList)
 
@@ -136,11 +166,17 @@ def num_pics_captured():
       
 # Database functions ------------------------------------------------------------
 def setup_db():
+   '''
+   Establishes a connection to the locally hosted database for user authentication.
+   '''
    # mysql -u root -p FacialRecognition; root
    mySQL = MySQLdb.connect(host="localhost", user="root", passwd="root", db="FacialRecognition") 
    db = mySQL.cursor() 
 
 def get_name(db, password):
+   '''
+   Retreives a name from the database corresponding to the password the user entered.
+   '''
    if sanitize_input(password):
       cmd = "SELECT first_name, last_name FROM person WHERE password=" + str(password)
       db.execute(cmd)
@@ -149,17 +185,25 @@ def get_name(db, password):
       return person[0] + " " + person[1]
 
 def sanitize_input(input):
-   return True
-   # Make sure input is not harmful to DB
+   '''
+   Makes sure input is not harmful to the database.
+   '''
+   return True #To be implemented later if necessary
 
 # Configure GUI components ------------------------------------------------------
 def configure_main_window():
+   '''
+   Configures the root window component.
+   '''
    root.geometry("700x400")
    root.resizable(width=False, height=False)
    root.configure(background="#FFF")
    root.title("In Yo Face")
 
 def configure_welcome_banner():
+   '''
+   Configures the welcome banner.
+   '''
    welcome_font = tkFont.Font(family='Helvetica', size=12, weight='bold')
    
    welcome_frame = tk.LabelFrame(master=root, relief="ridge", bg='black')
@@ -170,12 +214,18 @@ def configure_welcome_banner():
    welcome_label.grid(row=0, column=1, columnspan=2)
 
 def configure_folders():
+   '''
+   Creates a fresh victim folder for the current capture.
+   '''
    curPath = os.getcwd()
    if(('victim' in os.listdir(curPath)) == True):
       shutil.rmtree('victim')
    os.mkdir('victim')
 
 def configure_labels():
+   '''
+   Configures the label prompting the user entry.
+   '''
    lf = tk.LabelFrame(master=root, bg='red', bd=10, width=30, height=1)
    lf.grid(row=3, column=1)
 
@@ -185,6 +235,9 @@ def configure_labels():
    return (lf, lf_label)
 
 def configure_image_window(queue):
+   '''
+   Configures the image window for the video feed.
+   '''
    image_label = tk.Label(master=root)
    image_label.grid(row=3, column=0, rowspan=3)
 
@@ -193,6 +246,9 @@ def configure_image_window(queue):
    return image_label
 
 def configure_buttons(queue, image_label, lf, lf_label):
+   '''
+   Configures the buttons that allow user interactivity.
+   '''
    entry = tk.Entry(master=root, show='*', bg='white', fg='black', takefocus=1, width=30)
    entry.grid(row=4, column=1, sticky="n")
    
@@ -207,10 +263,16 @@ def configure_buttons(queue, image_label, lf, lf_label):
 
 # Bash commands -----------------------------------------------------------------
 def sh(script):
+   '''
+   Converts a string into a shell script.
+   '''
    os.system("bash -c '%s'" % script)
 
 # Main method -------------------------------------------------------------------
 if __name__ == '__main__':
+   '''
+   Main method. Configures all parts of the GUI as well as the video feed process, then calls the main loop.
+   '''
    queue = Queue()
    root = tk.Tk()
 
