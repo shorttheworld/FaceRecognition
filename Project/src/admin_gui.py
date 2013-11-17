@@ -101,7 +101,7 @@ def configure_main_window():
    '''
    Configures the root window component.
    '''
-   root.geometry("1000x400")
+   root.geometry("1300x400")
    root.resizable(width=False, height=False)
    root.configure(background="#EE8")
    root.title("In Yo Face Admin Tools")
@@ -112,19 +112,16 @@ def configure_fields():
    '''
    fn_label = tk.Label(master=root, text='First Name/Admin Name', background="#EE8")
    fn_label.grid(row=3, column=3)
-   #global fn_entry
    fn_entry = tk.Entry(master=root, width=20)
    fn_entry.grid(row=3, column=4)
 
    ln_label = tk.Label(master=root, text='Last Name', background="#EE8")
    ln_label.grid(row=4, column=3)
-   #global ln_entry
    ln_entry = tk.Entry(master=root, width=20)
    ln_entry.grid(row=4, column=4)
 
    pw_label = tk.Label(master=root, text='Password', background="#EE8")
    pw_label.grid(row=5, column=3)
-   #global pw_entry
    pw_entry = tk.Entry(master=root, width=20, show='*')
    pw_entry.grid(row=5, column=4)
 
@@ -138,14 +135,21 @@ def configure_image_window(queue, parent):
    Configures the image window for the video feed.
    '''
    image_label = tk.Label(master=root)
-   image_label.grid(row=3, column=0, rowspan=5)
+   image_label.grid(row=3, column=0, rowspan=5,)
 
    root.after(0, func=lambda: update_all(image_label, queue, parent))
 
 def configure_db_list(db):
-   db_list = tk.Listbox(master=root, selectmode="SINGLE", height=18, width=40)
-   db_list.grid(row=3, column=6, rowspan=7, padx=30)
-   
+   scrollbar = tk.Scrollbar(master=root, orient="vertical")
+   scrollbar.grid(row=3, column=9, rowspan=7, sticky="N"+"S")
+   db_list = tk.Listbox(master=root, selectmode="SINGLE", height=18,
+                        width=50, yscrollcommand=scrollbar.set)
+   db_list.grid(row=3, column=6, rowspan=7, columnspan=3)
+   db_list.insert(0, "FIRST NAME    LAST NAME    PASSWORD")
+   scrollbar.config(command=db_list.yview)
+   for num in range(50):
+      db_list.insert(db_list.size(), num)
+   #Need to call a function in the DB class here to populate the table
    return db_list
 
 def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
