@@ -49,6 +49,18 @@ class Server:
 		self.cursor.execute(sql)
 		self.db.commit()
 		
+	def getUsers(self)
+		sql="SELECT * FROM user"
+		self.cursor.execute(sql)
+		self.db.commit()
+		return self.cursor.fetchall()
+		
+	def getAdmins(self)
+		sql="SELECT * FROM admin"
+		self.cursor.execute(sql)
+		self.db.commit()
+		return self.cursor.fetchall()
+		
 	def ftpConnect(self):
 		self.ftp.login(self.host, self.user, self.passwd) #Resestablish the ftp connection if necessary
 		self.ftp.prot_p() #Secure the connection		
