@@ -113,17 +113,17 @@ def configure_fields():
    fn_label = tk.Label(master=root, text='First Name/Admin Name', background="#EE8")
    fn_label.grid(row=3, column=3)
    fn_entry = tk.Entry(master=root, width=20)
-   fn_entry.grid(row=3, column=4)
+   fn_entry.grid(row=3, column=4, padx=30)
 
    ln_label = tk.Label(master=root, text='Last Name', background="#EE8")
    ln_label.grid(row=4, column=3)
    ln_entry = tk.Entry(master=root, width=20)
-   ln_entry.grid(row=4, column=4)
+   ln_entry.grid(row=4, column=4, padx=30)
 
    pw_label = tk.Label(master=root, text='Password', background="#EE8")
    pw_label.grid(row=5, column=3)
    pw_entry = tk.Entry(master=root, width=20, show='*')
-   pw_entry.grid(row=5, column=4)
+   pw_entry.grid(row=5, column=4, padx=30)
 
    return (fn_entry, ln_entry, pw_entry)
 
@@ -141,28 +141,77 @@ def configure_image_window(queue, parent):
 
 def configure_db_list(db):
    scrollbar = tk.Scrollbar(master=root, orient="vertical")
-   scrollbar.grid(row=3, column=9, rowspan=7, sticky="N"+"S")
-   db_list = tk.Listbox(master=root, selectmode="SINGLE", height=18,
+   scrollbar.grid(row=3, column=10, rowspan=6, sticky="N"+"S")
+   db_list = tk.Listbox(master=root, selectmode="SINGLE", height=16,
                         width=50, yscrollcommand=scrollbar.set)
-   db_list.grid(row=3, column=6, rowspan=7, columnspan=3)
-   db_list.insert(0, "FIRST NAME    LAST NAME    PASSWORD")
+   db_list.grid(row=3, column=7, rowspan=6, columnspan=3)
+   usermode_btn = tk.Button(master=root, text="Users", width=20, command=lambda:switch_mode(0))
+   usermode_btn.grid(row=9, column=7)
+   adminmode_btn = tk.Button(master=root, text="Admins", width=20, command=lambda:switch_mode(1))
+   adminmode_btn.grid(row=9, column=8)
+   db_list.insert(0, "FIRSTNAME    LASTNAME    PASSWORD")
    scrollbar.config(command=db_list.yview)
    for num in range(50):
-      db_list.insert(db_list.size(), num)
-   #Need to call a function in the DB class here to populate the table
+      db_list.insert(db_list.size(), "THIS IS GARCON")
+   #refresh(mode, db_list)
    return db_list
+
+def delete_entry(curSelection, db, db_list):
+   try:
+      if((curSelection != ()) and (curSelection[0] != '0')):
+         cur = str(db_list.get(curSelection))
+         if mode == 0:
+            (fn, ln, pw) = cur.split()
+            db.deleteUser(pw)
+            refresh(0, db_list)
+         if mode == 1:
+            (username, pw) = cur.split()
+            db.deleteAdmin(username, pw)
+            refresh(1, db_list)
+      else:
+         tkMessageBox.showwarning(title="Error", message="Please select a valid entry from the list.")
+   except(IndexError):
+      pass
+
+def switch_mode(flag):
+   global mode
+   if flag == 0:
+      mode = 0
+   if flag == 1:
+      mode = 1
+
+def refresh(mode, db_list):
+   if mode == 0:
+      user_list = db.get_users()
+      db_list.delete(0, db_list.size())
+      db_list.insert(0, "FIRSTNAME    LASTNAME    PASSWORD")
+      try:
+         for (fn, ln, pw) in user_list:
+            db_list.insert(db_list.size(), fn + " " + ln + " " + pw)
+      except(TypeError):
+         pass
+   if mode == 1:
+      admin_list = db.get_admins()
+      db_list.delete(0, db_list.size())
+      db_list.insert(0, "USERNAME    PASSWORD")
+      try:
+         for (username, pw) in admin_list:
+            db_list.insert(db_list.size(), username + " " + lastname)
+      except(TypeError):
+         pass
 
 def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
    '''
    Configures the buttons that allow user interactivity.
    '''
-   adduser_btn = tk.Button(master=root, command=lambda:db_interface(fn_entry, ln_entry, pw_entry, 0, db), background="Green", width=15, text="Add User")
+   
+   adduser_btn = tk.Button(master=root, command=lambda:add_entry(fn_entry, ln_entry, pw_entry, 0, db, db_list), background="Green", width=15, text="Add User")
    adduser_btn.grid(row=6, column=3)
 
-   addadmin_btn = tk.Button(master=root, command=lambda:db_interface(fn_entry, ln_entry, pw_entry, 1, db), background="#4444FF", width=15, text="Add Admin")
+   addadmin_btn = tk.Button(master=root, command=lambda:add_entry(fn_entry, ln_entry, pw_entry, 1, db, db_list), background="#4444FF", width=15, text="Add Admin")
    addadmin_btn.grid(row=7, column=3)
 
-   delete_btn = tk.Button(master=root, command=lambda:db_interface(fn_entry, ln_entry, pw_entry, 2, db), background="Orange", width=15, text="Delete User")
+   delete_btn = tk.Button(master=root, command=lambda:delete_entry(db_list.curselection(), db, db_list), background="Orange", width=15, text="Delete Selection")
    delete_btn.grid(row=6, column=4)
    
    quit_btn = tk.Button(master=root, command=lambda:quit(root, p), background="Red", width=15, text="Quit")
@@ -211,28 +260,36 @@ def authorize(window, root):
    root.deiconify()
    window.destroy()
 
-def db_interface(fn_entry, ln_entry, pw_entry, flag, db, db_list):
+def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
    '''
    Checks fields for entry, then makes a sql query with the user input.
    Also allows the user to interface with the database table directly.
    '''
-   
-   if (flag != 1 and fn_entry.get() == ''):
+   global mode
+   if (flag == 0 and fn_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid first name.")
    elif (flag == 1 and fn_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid admin name")
-   elif (flag != 1 and ln_entry.get() == ''):
+   elif (flag == 0 and ln_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid last name")
-   elif (flag != 2 and pw_entry.get() == ''):
+   elif (pw_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid password.")
    else:
       if(flag == 0):
+         usr = str(fn_entry.get()) + '_' + str(ln_entry.get()) + '_' + str(pw_entry.get())
+         path = os.getcwd() + "\\" + usr
+         if(os.path.isdir(path) == False):
+            tkMessageBox.showwarning(title="Error", message="Please take some pictures to associate with the new user.")
+         elif(len(os.listdir(path)) < 12):
+            tkMessageBox.showwarning(title="Error", message="Please take more pictures. (12 required, " + str(len(os.listdir(path))) + " current)")
          #Need FN, LN, PW, picList(open each picture in read mode and append to a list)
          db.addUser(fn_entry.get(), ln_entry.get(), pw_entry.get())
+         switch_mode(0)
+         refresh(mode, db_list)
       elif(flag == 1):
-         db.addAdmin(fn_entry.get(), ln_entry.get(), pw_entry.get())
-      elif(flag == 2):
-         db.deleteUser(pw_entry.get())
+         db.addAdmin(fn_entry.get(), pw_entry.get())
+         switch_mode(1)
+         refresh(mode, db_list)
 
 def quit(root, process):
    '''
@@ -249,6 +306,8 @@ if __name__== '__main__':
    queue = Queue()
    (parent, child) = Pipe()
    p = Process(target=video_feed, args=(queue,))
+   global mode
+   mode = 0
     
    configure_main_window()
    (fn_entry, ln_entry, pw_entry) = configure_fields()

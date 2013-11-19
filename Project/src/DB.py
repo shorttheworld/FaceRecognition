@@ -30,7 +30,7 @@ class DB:
 		self.cursor.execute(sql, (fn,ln,pw,path))
 		self.db.commit()
 		
-	def addAdmin(self, fn, ln, pw):
+	def addAdmin(self, fn, pw):
 		#self.addUser()
 		pass_hash=raw_input("Password: ")
 		sql="INSERT INTO admin (USERNAME, PASS_HASH) VALUES (%s,%s)"
@@ -44,6 +44,10 @@ class DB:
                 sql="DELETE FROM user WHERE PASSWORD='" + pw +"'"
                 self.cursor.execute(sql)
                 self.db.commit()
+
+        def deleteAdmin(self, username, pw):
+                #Delete an admin based off username or password(whichever you think is necessary)
+                pass
         
 	def uploadLearner(self):
 		rootWin=tk.Tk()
@@ -53,7 +57,14 @@ class DB:
 		print(len(file))
 		self.cursor.execute(sql, (file))
 		self.db.commit()
-	
+
+	def get_users(self):
+                #Return a list of users as a list of (First name, Last name, password) tuples
+                pass
+
+        def get_admins(self):
+                #Return a list of admins as a list of (Username, password) tuples
+                pass
 	"""	
 	def setupDB(self):
 		sql=read(open('inyoface.sql'))

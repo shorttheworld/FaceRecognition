@@ -17,7 +17,7 @@ import tkFont
 
 from video import create_capture
 
-import FaceRecognizer
+from FaceRecognizer import *
 
 # tkinter GUI functions ---------------------------------------------------------
 def update_video_feed(image_label, frame):
