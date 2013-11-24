@@ -17,31 +17,33 @@ class Server:
 		self.ftp=self.ftpConnect()
 		#self.ftp.prot_p()
 		
-	def addUser(self, fn, ln, pw, piclist):
+	def addUser(self, fn, ln, username, piclist):
 		sql="INSERT INTO user (FIRST_NAME, LAST_NAME, USERNAME) VALUES (%s,%s, %s)"
-		self.cursor.execute(sql, (fn,ln,pw))
+		self.cursor.execute(sql, (fn,ln,username))
 		self.db.commit()
 		
 		self.ftpConnect()
 		self.ftp.cwd("./data/") #switch to data folder
-		self.ftp.mkdir(pw) #create a folder for the user
-		ftp.cwd(pw)
+		self.ftp.mkdir(username) #create a folder for the user
+		ftp.cwd(username)
 		for pic in piclist:
 			self.ftp.storbinary("STOR "+pic.name, pic)
 	
-	def deleteUser(self, pw):
-		sql="DELETE FROM user WHERE PASSWORD='"+pw+"'"
+	def deleteUser(self, username):
+		sql="DELETE FROM user WHERE USERNAME='"+username+"'"
 		self.cursor.execute(sql)
 		self.db.commit()
-		
+
+		'''
 		self.ftpConnect()
 		ftp.cwd("./data/")
 		self.ftp.rmd(pw)
+		'''
 	
 	def sendLearner(self, learner):
 		self.ftp_Connect()
 		ftp.cwd("./metadata/")
-		self.ftp.storbinary("STOR "+lerner.name,learner)
+		self.ftp.storbinary("STOR "+learner.name,learner)
 		
 	def addAdmin(self,user, passwd):
 		sql="INSERT INTO admin (USERNAME, PASSWORD) VALUES (%s, %s)"
