@@ -13,7 +13,7 @@ from multiprocessing import Process, Queue, Pipe
 from video import create_capture
 
 import time
-import DB
+import server
 import os
 import socket
 
@@ -89,10 +89,6 @@ def snap_pics(frame, fn, ln, pw):
    if(cur<12):
       #Store photo in the folder
       cv2.imwrite(path + "\\" + str(cur) + ".pgm", crop_img)
-   else:
-      #Call Solace's function
-      #Delete the folder
-      return False
 
 def set_snap(child):
    child.send(True)
@@ -101,7 +97,7 @@ def configure_main_window():
    '''
    Configures the root window component.
    '''
-   root.geometry("1300x400")
+   root.geometry("1125x400")
    root.resizable(width=False, height=False)
    root.configure(background="#EE8")
    root.title("In Yo Face Admin Tools")
@@ -120,7 +116,7 @@ def configure_fields():
    ln_entry = tk.Entry(master=root, width=20)
    ln_entry.grid(row=4, column=4, padx=30)
 
-   pw_label = tk.Label(master=root, text='Password', background="#EE8")
+   pw_label = tk.Label(master=root, text='Username/ Admin Password', background="#EE8")
    pw_label.grid(row=5, column=3)
    pw_entry = tk.Entry(master=root, width=20, show='*')
    pw_entry.grid(row=5, column=4, padx=30)
@@ -139,20 +135,18 @@ def configure_image_window(queue, parent):
 
    root.after(0, func=lambda: update_all(image_label, queue, parent))
 
-def configure_db_list(db):
+def configure_db_list():
    scrollbar = tk.Scrollbar(master=root, orient="vertical")
    scrollbar.grid(row=3, column=10, rowspan=6, sticky="N"+"S")
    db_list = tk.Listbox(master=root, selectmode="SINGLE", height=16,
                         width=50, yscrollcommand=scrollbar.set)
    db_list.grid(row=3, column=7, rowspan=6, columnspan=3)
-   usermode_btn = tk.Button(master=root, text="Users", width=20, command=lambda:switch_mode(0))
+   usermode_btn = tk.Button(master=root, text="Users", width=20, command=lambda:switch_mode(0, db_list))
    usermode_btn.grid(row=9, column=7)
-   adminmode_btn = tk.Button(master=root, text="Admins", width=20, command=lambda:switch_mode(1))
+   adminmode_btn = tk.Button(master=root, text="Admins", width=20, command=lambda:switch_mode(1, db_list))
    adminmode_btn.grid(row=9, column=8)
-   db_list.insert(0, "FIRSTNAME    LASTNAME    PASSWORD")
+   db_list.insert(0, "FIRSTNAME    LASTNAME    USERNAME")
    scrollbar.config(command=db_list.yview)
-   for num in range(50):
-      db_list.insert(db_list.size(), "THIS IS GARCON")
    #refresh(mode, db_list)
    return db_list
 
@@ -173,30 +167,31 @@ def delete_entry(curSelection, db, db_list):
    except(IndexError):
       pass
 
-def switch_mode(flag):
+def switch_mode(flag, db_list):
    global mode
    if flag == 0:
       mode = 0
    if flag == 1:
       mode = 1
+   refresh(mode, db_list)
 
 def refresh(mode, db_list):
    if mode == 0:
-      user_list = db.get_users()
+      user_list = db.getUsers()
       db_list.delete(0, db_list.size())
-      db_list.insert(0, "FIRSTNAME    LASTNAME    PASSWORD")
+      db_list.insert(0, "FIRSTNAME    LASTNAME    USERNAME")
       try:
          for (fn, ln, pw) in user_list:
             db_list.insert(db_list.size(), fn + " " + ln + " " + pw)
       except(TypeError):
          pass
    if mode == 1:
-      admin_list = db.get_admins()
+      admin_list = db.getAdmins()
       db_list.delete(0, db_list.size())
       db_list.insert(0, "USERNAME    PASSWORD")
       try:
          for (username, pw) in admin_list:
-            db_list.insert(db_list.size(), username + " " + lastname)
+            db_list.insert(db_list.size(), username + " " + pw)
       except(TypeError):
          pass
 
@@ -220,43 +215,62 @@ def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
    capture_btn = tk.Button(master=root, command=lambda:set_snap(child), background="#7777FF", text="Take a picture!")
    capture_btn.grid(row=9, column=0)
 
-def auth_admin(root, process):
+def auth_admin(root, process, db):
    auth = tk.Toplevel(bg="#EE8")
    auth.title("Admin authentication")
-   auth.geometry("400x300")
+   auth.geometry("500x400")
    auth.protocol('WM_DELETE_WINDOW', lambda:quit(root, p))
    
-   msg = tk.Message(auth, bg="#EE8", text="Please enter your credentials and the hostname you wish to connect to.")
-   msg.pack()
+   msg = tk.Label(auth, bg="#EE8", text="Please enter your credentials and the hostname you wish to connect to.")
+   msg.grid(sticky='NE', columnspan=2, pady=20)
 
-   auth_label = tk.Label(auth, bg="#EE8", text="Username")
-   auth_label.pack()
+   dbu_label = tk.Label(auth, bg="#EE8", text="Database Username")
+   dbu_label.grid(row=1, column=0)
 
-   auth_entry = tk.Entry(auth, width=15)
-   auth_entry.pack()
+   dbu_entry = tk.Entry(auth, width=15)
+   dbu_entry.grid(row=2, column=0, pady=20)
 
-   pw_label = tk.Label(auth, bg="#EE8", text ="Password")
-   pw_label.pack()
+   ftpu_label = tk.Label(auth, bg="#EE8", text="FTP Username")
+   ftpu_label.grid(row=1, column=1)
 
-   pw_entry = tk.Entry(auth, width=15)
-   pw_entry.pack()
+   ftpu_entry = tk.Entry(auth, width=15)
+   ftpu_entry.grid(row=2, column=1, pady=20)
 
-   host_label = tk.Label(auth, bg="#EE8", text="Hostname")
-   host_label.pack()
+   dbpw_label = tk.Label(auth, bg="#EE8", text = "Database Password")
+   dbpw_label.grid(row=3, column=0)
 
-   host_entry = tk.Entry(auth, width=15)
-   host_entry.pack()
+   dbpw_entry = tk.Entry(auth, width=15)
+   dbpw_entry.grid(row=4, column=0, pady=20)
 
-   auth_btn = tk.Button(auth, text="Authenticate", command=lambda:authorize(auth, root))
-   auth_btn.pack()
+   ftppw_label = tk.Label(auth, bg="#EE8", text = "FTP Password")
+   ftppw_label.grid(row=3, column=1)
+
+   ftppw_entry = tk.Entry(auth, width=15)
+   ftppw_entry.grid(row=4, column=1, pady=20)
+
+   dbhost_label = tk.Label(auth, bg="#EE8", text="Database Hostname")
+   dbhost_label.grid(row=5, column=0)
+
+   dbhost_entry = tk.Entry(auth, width=15)
+   dbhost_entry.grid(row=6, column=0, pady=20)
+
+   auth_btn = tk.Button(auth, text="Authenticate", command=lambda:authorize(auth, root, db))
+   auth_btn.grid(row=7, column=0)
 
    cancel_btn = tk.Button(auth, text="Cancel", command=lambda:quit(root, p))
-   cancel_btn.pack()
+   cancel_btn.grid(row=7, column=1)
 
-def authorize(window, root):
-   #Need to check here if credentials are valid
+def authorize(window, root, db):
+   flag = True
+   #Need to check here if credentials are valid, then connect to DB/FTP server
+   while flag:
+      try:
+         #db.connect(window.dbu_entry.get(), window.ftpu_entry.get(), window.dbpw_entry.get(), window.ftpu_entry.get(), window.dbhost_entry.get())
+         #Also need to save the hostname (open in read mode, take input, then open in write mode and re-save)
 
-   #Also need to save the hostname (open in read mode, take input, then open in write mode and re-save)
+         flag = False
+      except:
+         tkMessageBox.showwarning(title="Error", message="Authentication failed. Please try again.")
    root.deiconify()
    window.destroy()
 
@@ -269,9 +283,9 @@ def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
    if (flag == 0 and fn_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid first name.")
    elif (flag == 1 and fn_entry.get() == ''):
-      tkMessageBox.showwarning(title="Error", message="Please enter a valid admin name")
+      tkMessageBox.showwarning(title="Error", message="Please enter a valid admin name.")
    elif (flag == 0 and ln_entry.get() == ''):
-      tkMessageBox.showwarning(title="Error", message="Please enter a valid last name")
+      tkMessageBox.showwarning(title="Error", message="Please enter a valid last name.")
    elif (pw_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid password.")
    else:
@@ -282,14 +296,16 @@ def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
             tkMessageBox.showwarning(title="Error", message="Please take some pictures to associate with the new user.")
          elif(len(os.listdir(path)) < 12):
             tkMessageBox.showwarning(title="Error", message="Please take more pictures. (12 required, " + str(len(os.listdir(path))) + " current)")
-         #Need FN, LN, PW, picList(open each picture in read mode and append to a list)
-         db.addUser(fn_entry.get(), ln_entry.get(), pw_entry.get())
-         switch_mode(0)
-         refresh(mode, db_list)
+         else:
+            #Give text field input, and open each picture in read mode and append to a list
+            picList = []
+            for pic in os.listdir(path):
+               picList.append(cv2.imread(pic))
+            db.addUser(fn_entry.get(), ln_entry.get(), pw_entry.get(), picList)
+            switch_mode(0, db_list)
       elif(flag == 1):
          db.addAdmin(fn_entry.get(), pw_entry.get())
-         switch_mode(1)
-         refresh(mode, db_list)
+         switch_mode(1, db_list)
 
 def quit(root, process):
    '''
@@ -312,12 +328,12 @@ if __name__== '__main__':
    configure_main_window()
    (fn_entry, ln_entry, pw_entry) = configure_fields()
    configure_image_window(queue, parent)
-   db = DB.DB()
-   db_list = configure_db_list(db)
+   db = server.Server('localhost', 'root', '', 'Chris', 'colliefarms1')
+   db_list = configure_db_list()
    configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list)
    
    p.start()
    root.withdraw()
-   auth_admin(root, p)
+   auth_admin(root, p, db)
    root.protocol('WM_DELETE_WINDOW', lambda:quit(root, p))
    root.mainloop()
