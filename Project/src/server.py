@@ -17,17 +17,10 @@ class Server:
 		self.ftp=self.ftpConnect()
 		#self.ftp.prot_p()
 		
-	def addUser(self, fn, ln, username, piclist):
+	def addUser(self, fn, ln, username):
 		sql="INSERT INTO user (FIRST_NAME, LAST_NAME, USERNAME) VALUES (%s,%s, %s)"
 		self.cursor.execute(sql, (fn,ln,username))
 		self.db.commit()
-		
-		self.ftpConnect()
-		self.ftp.cwd("./data/") #switch to data folder
-		self.ftp.mkdir(username) #create a folder for the user
-		ftp.cwd(username)
-		for pic in piclist:
-			self.ftp.storbinary("STOR "+pic.name, pic)
 	
 	def deleteUser(self, username):
 		sql="DELETE FROM user WHERE USERNAME='"+username+"'"

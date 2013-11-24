@@ -217,54 +217,51 @@ def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
 def auth_admin(root, process, db):
    auth = tk.Toplevel(bg="#EE8")
    auth.title("Admin authentication")
-   auth.geometry("500x400")
+   auth.geometry("500x425")
    auth.protocol('WM_DELETE_WINDOW', lambda:quit(root, p))
    
    msg = tk.Label(auth, bg="#EE8", text="Please enter your credentials and the hostname you wish to connect to.")
-   msg.grid(sticky='NE', columnspan=2, pady=20)
+   #msg.grid(sticky='NE', columnspan=2, pady=20)
+   msg.pack(pady=10)
 
-   dbu_label = tk.Label(auth, bg="#EE8", text="Database Username")
-   dbu_label.grid(row=1, column=0)
+   dbu_label = tk.Label(auth, bg="#EE8", text="Username")
+   #dbu_label.grid(row=1, column=0)
+   dbu_label.pack(pady=10)
 
    dbu_entry = tk.Entry(auth, width=15)
-   dbu_entry.grid(row=2, column=0, pady=20)
+   #dbu_entry.grid(row=2, column=0, pady=20)
+   dbu_entry.pack(pady=10)
 
-   ftpu_label = tk.Label(auth, bg="#EE8", text="FTP Username")
-   ftpu_label.grid(row=1, column=1)
-
-   ftpu_entry = tk.Entry(auth, width=15)
-   ftpu_entry.grid(row=2, column=1, pady=20)
-
-   dbpw_label = tk.Label(auth, bg="#EE8", text = "Database Password")
-   dbpw_label.grid(row=3, column=0)
+   dbpw_label = tk.Label(auth, bg="#EE8", text = "Password")
+   #dbpw_label.grid(row=3, column=0)
+   dbpw_label.pack(pady=10)
 
    dbpw_entry = tk.Entry(auth, width=15)
-   dbpw_entry.grid(row=4, column=0, pady=20)
+   #dbpw_entry.grid(row=4, column=0, pady=20)
+   dbpw_entry.pack(pady=10)
 
-   ftppw_label = tk.Label(auth, bg="#EE8", text = "FTP Password")
-   ftppw_label.grid(row=3, column=1)
-
-   ftppw_entry = tk.Entry(auth, width=15)
-   ftppw_entry.grid(row=4, column=1, pady=20)
-
-   dbhost_label = tk.Label(auth, bg="#EE8", text="Database Hostname")
-   dbhost_label.grid(row=5, column=0)
+   dbhost_label = tk.Label(auth, bg="#EE8", text="Hostname")
+   #dbhost_label.grid(row=5, column=0)
+   dbhost_label.pack(pady=10)
 
    dbhost_entry = tk.Entry(auth, width=15)
-   dbhost_entry.grid(row=6, column=0, pady=20)
+   #dbhost_entry.grid(row=6, column=0, pady=20)
+   dbhost_entry.pack(pady=10)
 
    auth_btn = tk.Button(auth, text="Authenticate", command=lambda:authorize(auth, root, db))
-   auth_btn.grid(row=7, column=0)
+   #auth_btn.grid(row=7, column=0)
+   auth_btn.pack(pady=10)
 
    cancel_btn = tk.Button(auth, text="Cancel", command=lambda:quit(root, p))
-   cancel_btn.grid(row=7, column=1)
+   #cancel_btn.grid(row=7, column=1)
+   cancel_btn.pack(pady=10)
 
 def authorize(window, root, db):
    flag = True
    #Need to check here if credentials are valid, then connect to DB/FTP server
    while flag:
       try:
-         #db.connect(window.dbu_entry.get(), window.ftpu_entry.get(), window.dbpw_entry.get(), window.ftpu_entry.get(), window.dbhost_entry.get())
+         #db.connect(window.dbu_entry.get(), window.dbpw_entry.get(), window.dbhost_entry.get())
          #Also need to save the hostname (open in read mode, take input, then open in write mode and re-save)
 
          flag = False
@@ -296,11 +293,8 @@ def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
          elif(len(os.listdir(path)) < 12):
             tkMessageBox.showwarning(title="Error", message="Please take more pictures. (12 required, " + str(len(os.listdir(path))) + " current)")
          else:
-            #Give text field input, and open each picture in read mode and append to a list
-            picList = []
-            for pic in os.listdir(path):
-               picList.append(cv2.imread(pic))
-            db.addUser(fn_entry.get(), ln_entry.get(), pw_entry.get(), picList)
+            #Give text field input to the database to create a new user
+            db.addUser(fn_entry.get(), ln_entry.get(), pw_entry.get())
             switch_mode(0, db_list)
       elif(flag == 1):
          db.addAdmin(fn_entry.get(), pw_entry.get())
