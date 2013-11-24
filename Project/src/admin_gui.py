@@ -38,7 +38,7 @@ def update_all(image_label, queue, parent):
       (fn, ln, pw) = read_fields()
       if(parent.poll()):
          parent.recv()
-         snap_pics(frame, fn, ln, pw)
+         snap_pics(frame, pw)
       root.after(0, func=lambda: update_all(image_label, queue, parent))
    except Exception:
       pass
@@ -74,24 +74,26 @@ def crop_frame(frame):
 
    return frame
 
-def snap_pics(frame, fn, ln, pw):
+def snap_pics(frame, pw):
    '''
    Takes a picture from the video feed and stores it in the filesystem.
    '''
-   usr = str(fn) + '_' + str(ln) + '_' + str(pw)
-   path = os.getcwd() + "\\" + usr
+   path = os.getcwd() + "/../data/" + pw + "/"
    if(os.path.isdir(path) == False):
       os.mkdir(path)
+   elif((os.path.isdir(path) == True) and (len(os.listdir(path)) == 12)):
+      tkMessageBox.showwarning(title="Error", message="That username is already in use.")
 
    crop_img = crop_frame(frame)
    cur=len(os.listdir(path)) #this will access the file system where the pictures are and find how
    #many have been taken
    if(cur<12):
       #Store photo in the folder
-      cv2.imwrite(path + "\\" + str(cur) + ".pgm", crop_img)
+      cv2.imwrite(path + str(cur) + ".pgm", crop_img)
 
-def set_snap(child):
-   child.send(True)
+def clean_data(db):
+   #TODO: Delete all the partially full image folders or ones that are no longer in the database.
+   pass
 
 def configure_main_window():
    '''
@@ -146,7 +148,6 @@ def configure_db_list():
    adminmode_btn = tk.Button(master=root, text="Admins", width=20, command=lambda:switch_mode(1, db_list))
    adminmode_btn.grid(row=9, column=8)
    scrollbar.config(command=db_list.yview)
-   refresh(0, db_list)
    return db_list
 
 def delete_entry(curSelection, db, db_list):
@@ -159,8 +160,9 @@ def delete_entry(curSelection, db, db_list):
             refresh(0, db_list)
          if mode == 1:
             (username, pw) = cur.split()
-            db.deleteAdmin(username, pw)
+            db.delAdmin(username)
             refresh(1, db_list)
+         #Retrain from trainer.py
       else:
          tkMessageBox.showwarning(title="Error", message="Please select a valid entry from the list.")
    except(IndexError):
@@ -211,64 +213,65 @@ def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
    quit_btn = tk.Button(master=root, command=lambda:quit(root, p), background="Red", width=15, text="Quit")
    quit_btn.grid(row=7, column=4)
 
-   capture_btn = tk.Button(master=root, command=lambda:set_snap(child), background="#7777FF", text="Take a picture!")
+   capture_btn = tk.Button(master=root, command=lambda:child.send(True), background="#7777FF", text="Take a picture!")
    capture_btn.grid(row=9, column=0)
 
 def auth_admin(root, process, db):
+   #TODO: Change so it is checking versus DB admin table instead of requiring DB info.
    auth = tk.Toplevel(bg="#EE8")
    auth.title("Admin authentication")
    auth.geometry("500x425")
    auth.protocol('WM_DELETE_WINDOW', lambda:quit(root, p))
+
+   last = open("lastlogin.txt", "r")
+   last_str = last.read().split()
    
    msg = tk.Label(auth, bg="#EE8", text="Please enter your credentials and the hostname you wish to connect to.")
-   #msg.grid(sticky='NE', columnspan=2, pady=20)
    msg.pack(pady=10)
 
    dbu_label = tk.Label(auth, bg="#EE8", text="Username")
-   #dbu_label.grid(row=1, column=0)
    dbu_label.pack(pady=10)
 
    dbu_entry = tk.Entry(auth, width=15)
-   #dbu_entry.grid(row=2, column=0, pady=20)
    dbu_entry.pack(pady=10)
 
    dbpw_label = tk.Label(auth, bg="#EE8", text = "Password")
-   #dbpw_label.grid(row=3, column=0)
    dbpw_label.pack(pady=10)
 
    dbpw_entry = tk.Entry(auth, width=15)
-   #dbpw_entry.grid(row=4, column=0, pady=20)
    dbpw_entry.pack(pady=10)
 
    dbhost_label = tk.Label(auth, bg="#EE8", text="Hostname")
-   #dbhost_label.grid(row=5, column=0)
    dbhost_label.pack(pady=10)
 
    dbhost_entry = tk.Entry(auth, width=15)
-   #dbhost_entry.grid(row=6, column=0, pady=20)
    dbhost_entry.pack(pady=10)
 
-   auth_btn = tk.Button(auth, text="Authenticate", command=lambda:authorize(auth, root, db))
-   #auth_btn.grid(row=7, column=0)
+   if(len(last_str) == 2):
+      dbu_entry.insert(0, last_str[0])
+      dbhost_entry.insert(0, last_str[1])
+   elif(len(last_str) == 3):
+      dbu_entry.insert(0, last_str[0])
+      dbpw_entry.insert(0, last_str[1])
+      dbhost_entry.insert(0, last_str[2])
+      
+
+   auth_btn = tk.Button(auth, text="Authenticate", command=lambda:authorize(auth, root, db, dbhost_entry.get(), dbu_entry.get(), dbpw_entry.get()))
    auth_btn.pack(pady=10)
 
    cancel_btn = tk.Button(auth, text="Cancel", command=lambda:quit(root, p))
-   #cancel_btn.grid(row=7, column=1)
    cancel_btn.pack(pady=10)
 
-def authorize(window, root, db):
-   flag = True
-   #Need to check here if credentials are valid, then connect to DB/FTP server
-   while flag:
-      try:
-         #db.connect(window.dbu_entry.get(), window.dbpw_entry.get(), window.dbhost_entry.get())
-         #Also need to save the hostname (open in read mode, take input, then open in write mode and re-save)
-
-         flag = False
-      except:
-         tkMessageBox.showwarning(title="Error", message="Authentication failed. Please try again.")
-   root.deiconify()
-   window.destroy()
+def authorize(window, root, db, host, username, pw):
+   try:
+      db.connect(host, username, pw)
+      with open("lastlogin.txt", "w") as last:
+         last.write(username + ' ' + pw + ' ' + host)
+      #Also need to save the hostname (open in read mode, take input, then open in write mode and re-save)
+      root.deiconify()
+      window.destroy()
+   except:
+      tkMessageBox.showwarning(title="Error", message="Authentication failed. Please try again.")
 
 def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
    '''
@@ -276,18 +279,23 @@ def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
    Also allows the user to interface with the database table directly.
    '''
    global mode
-   if (flag == 0 and fn_entry.get() == ''):
+   #Ensure correct input
+   if(flag == 0 and fn_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid first name.")
-   elif (flag == 1 and fn_entry.get() == ''):
+   elif(flag == 1 and fn_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid admin name.")
-   elif (flag == 0 and ln_entry.get() == ''):
+   elif(flag == 0 and ln_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid last name.")
-   elif (pw_entry.get() == ''):
+   elif(flag == 0 and pw_entry.get() == ''):
+      tkMessageBox.showwarning(title="Error", message="Please enter a valid username.")
+   elif(flag == 1 and pw_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid password.")
+   elif((' ' in fn_entry.get()) or (' ' in ln_entry.get()) or (' ' in pw_entry).get()):
+      tkMessageBox.showwarning(title="Error", message="Spaces are not allowed in login information.")
    else:
+      #Add user
       if(flag == 0):
-         usr = str(fn_entry.get()) + '_' + str(ln_entry.get()) + '_' + str(pw_entry.get())
-         path = os.getcwd() + "\\" + usr
+         path = os.getcwd() + "/../data/" + pw_entry.get() + "/"
          if(os.path.isdir(path) == False):
             tkMessageBox.showwarning(title="Error", message="Please take some pictures to associate with the new user.")
          elif(len(os.listdir(path)) < 12):
@@ -296,9 +304,14 @@ def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
             #Give text field input to the database to create a new user
             db.addUser(fn_entry.get(), ln_entry.get(), pw_entry.get())
             switch_mode(0, db_list)
+            #Retrain from trainer.py
+      #Add admin
       elif(flag == 1):
          db.addAdmin(fn_entry.get(), pw_entry.get())
          switch_mode(1, db_list)
+      fn_entry.delete(0, 'end')
+      ln_entry.delete(0, 'end')
+      pw_entry.delete(0, 'end')
 
 def quit(root, process):
    '''
@@ -321,7 +334,7 @@ if __name__== '__main__':
    configure_main_window()
    (fn_entry, ln_entry, pw_entry) = configure_fields()
    configure_image_window(queue, parent)
-   db = server.Server('localhost', 'root', '', 'Chris', 'colliefarms1')
+   db = server.Server()
    db_list = configure_db_list()
    configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list)
    
