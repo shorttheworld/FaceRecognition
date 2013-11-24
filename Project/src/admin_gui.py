@@ -97,7 +97,7 @@ def configure_main_window():
    '''
    Configures the root window component.
    '''
-   root.geometry("1125x400")
+   root.geometry("1150x400")
    root.resizable(width=False, height=False)
    root.configure(background="#EE8")
    root.title("In Yo Face Admin Tools")
@@ -145,9 +145,8 @@ def configure_db_list():
    usermode_btn.grid(row=9, column=7)
    adminmode_btn = tk.Button(master=root, text="Admins", width=20, command=lambda:switch_mode(1, db_list))
    adminmode_btn.grid(row=9, column=8)
-   db_list.insert(0, "FIRSTNAME    LASTNAME    USERNAME")
    scrollbar.config(command=db_list.yview)
-   #refresh(mode, db_list)
+   refresh(0, db_list)
    return db_list
 
 def delete_entry(curSelection, db, db_list):

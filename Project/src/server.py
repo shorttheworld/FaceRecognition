@@ -7,15 +7,19 @@ from ftplib import FTP
 
 class Server:
 	def __init__(self, host, user, passwd, ftpuser, ftppw):
+                self.host=host
+                self.ftpuser=ftpuser
+                self.ftppw=ftppw
+                
 		self.db=SQL.connect(host=host, user=user,passwd=passwd,db='inyoface', port=3306)
 		self.cursor=self.db.cursor()
-		
-		self.ftp=FTP(host,ftpuser,ftppw)
+		self.ftp=None
+		self.ftp=self.ftpConnect()
 		#self.ftp.prot_p()
 		
 	def addUser(self, fn, ln, pw, piclist):
 		sql="INSERT INTO user (FIRST_NAME, LAST_NAME, USERNAME) VALUES (%s,%s, %s)"
-		self.cursor.execute(sql, (fn,ln,pw,path))
+		self.cursor.execute(sql, (fn,ln,pw))
 		self.db.commit()
 		
 		self.ftpConnect()
@@ -62,6 +66,7 @@ class Server:
 		return self.cursor.fetchall()
 		
 	def ftpConnect(self):
-		self.ftp.login(self.host, self.user, self.passwd) #Resestablish the ftp connection if necessary
-		#self.ftp.prot_p() #Secure the connection
+                if self.ftp==None: #Create FTP object if none exists
+                        return FTP(self.host, self.ftpuser, self.ftppw)
+		self.ftp.login(self.host, self.ftpuser, self.ftppw) #Resestablish the ftp connection if necessary
 		
