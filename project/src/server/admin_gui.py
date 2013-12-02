@@ -235,64 +235,56 @@ def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
    capture_btn.grid(row=9, column=0)
 
 def auth_admin(root, process, db):
-   #TODO: Change so it is checking versus DB admin table instead of requiring DB info.
+   #TODO: Change so it is checking versus admin table instead of requiring DB info.
    auth = tk.Toplevel(bg="#EE8")
    auth.title("Admin authentication")
    auth.geometry("500x425")
    auth.protocol('WM_DELETE_WINDOW', lambda:quit(root, p, db))
+   
+   msg = tk.Label(auth, bg="#EE8", text="Please enter your credentials.")
+   msg.pack(pady=10)
+
+   adminun_label = tk.Label(auth, bg="#EE8", text="Username")
+   adminun_label.pack(pady=10)
+
+   adminun_entry = tk.Entry(auth, width=15)
+   adminun_entry.pack(pady=10)
+
+   adminpw_label = tk.Label(auth, bg="#EE8", text = "Password")
+   adminpw_label.pack(pady=10)
+
+   adminpw_entry = tk.Entry(auth, width=15)
+   adminpw_entry.pack(pady=10)
 
    try:
       last = open("lastlogin.txt", "r")
       last_str = last.read().split()
    except:
       last_str = ''
-   
-   msg = tk.Label(auth, bg="#EE8", text="Please enter your credentials and the hostname you wish to connect to.")
-   msg.pack(pady=10)
 
-   dbu_label = tk.Label(auth, bg="#EE8", text="Username")
-   dbu_label.pack(pady=10)
-
-   dbu_entry = tk.Entry(auth, width=15)
-   dbu_entry.pack(pady=10)
-
-   dbpw_label = tk.Label(auth, bg="#EE8", text = "Password")
-   dbpw_label.pack(pady=10)
-
-   dbpw_entry = tk.Entry(auth, width=15)
-   dbpw_entry.pack(pady=10)
-
-   dbhost_label = tk.Label(auth, bg="#EE8", text="Hostname")
-   dbhost_label.pack(pady=10)
-
-   dbhost_entry = tk.Entry(auth, width=15)
-   dbhost_entry.pack(pady=10)
-
-   if(last_str == ''):
+   if(len(last_str) == 2):
+      adminun_entry.insert(0, last_str[0])
+      adminpw_entry.insert(0, last_str[1])
+   else:
       pass
-   elif(len(last_str) == 2):
-      dbu_entry.insert(0, last_str[0])
-      dbhost_entry.insert(0, last_str[1])
-   elif(len(last_str) == 3):
-      dbu_entry.insert(0, last_str[0])
-      dbpw_entry.insert(0, last_str[1])
-      dbhost_entry.insert(0, last_str[2])
       
 
-   auth_btn = tk.Button(auth, text="Authenticate", command=lambda:authorize(auth, root, db, dbhost_entry.get(), dbu_entry.get(), dbpw_entry.get()))
+   auth_btn = tk.Button(auth, text="Authenticate", command=lambda:authorize(auth, root, db, adminun_entry.get(), adminpw_entry.get()))
    auth_btn.pack(pady=10)
 
    cancel_btn = tk.Button(auth, text="Cancel", command=lambda:quit(root, p, db))
    cancel_btn.pack(pady=10)
 
-def authorize(window, root, db, host, username, pw):
+def authorize(window, root, db, username, pw):
    try:
-      db.connect(host, username, pw)
-      with open("lastlogin.txt", "w") as last:
-         last.write(username + ' ' + pw + ' ' + host)
-      #Also need to save the hostname (open in read mode, take input, then open in write mode and re-save)
-      root.deiconify()
-      window.destroy()
+      admin = db.getAdmin(username)
+      if(pw == admin[0][1]):
+         with open("lastlogin.txt", "w") as last:
+            last.write(username + ' ' + pw)
+         root.deiconify()
+         window.destroy()
+      else:
+         tkMessageBox.showwarning(title="Error", message="Invalid password. Please try again.")
    except:
       tkMessageBox.showwarning(title="Error", message="Authentication failed. Please try again.")
 
@@ -362,6 +354,7 @@ if __name__== '__main__':
    (fn_entry, ln_entry, pw_entry) = configure_fields()
    configure_image_window(queue, parent)
    db = server.Server()
+   db.connect()
    db_list = configure_db_list()
    configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list)
    

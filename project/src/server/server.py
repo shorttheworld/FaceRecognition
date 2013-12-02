@@ -5,7 +5,26 @@ import MySQLdb as SQL
 
 class Server: 
 		
-	def connect(self, host, user, passwd):
+	def connect(self):
+                try:
+                      last = open("dbconfig.txt", "r")
+                      last_str = last.read().split()
+                except:
+                      last_str = ''
+
+                if(last_str == ''):
+                      user = 'root'
+                      passwd = ''
+                      host = 'localhost'
+                elif(len(last_str) == 2):
+                      user = last_str[0]
+                      passwd = ''
+                      host = last_str[1]
+                elif(len(last_str) == 3):
+                      user = last_str[0]
+                      passwd = last_str[1]
+                      host = last_str[2]
+                
 		self.db=SQL.connect(host=host, user=user,passwd=passwd,db='inyoface', port=3306)
 		self.cursor=self.db.cursor()
 		
@@ -48,7 +67,7 @@ class Server:
 		return self.cursor.fetchall()
 
 	def getAdmin(self, user):
-                sql="SELECT PASS_HASH FROM admin WHERE USERNAME='"+user+"'"
+                sql="SELECT * FROM admin WHERE USERNAME='"+user+"'"
                 self.cursor.execute(sql)
                 self.db.commit()
                 return self.cursor.fetchall()
