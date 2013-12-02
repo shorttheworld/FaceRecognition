@@ -16,6 +16,7 @@ import time
 import server
 import os
 import socket
+import shutil
 
 def update_video_feed(image_label, frame):
    '''
@@ -78,22 +79,39 @@ def snap_pics(frame, pw):
    '''
    Takes a picture from the video feed and stores it in the filesystem.
    '''
-   path = os.getcwd() + "/../data/" + pw + "/"
-   if(os.path.isdir(path) == False):
-      os.mkdir(path)
-   elif((os.path.isdir(path) == True) and (len(os.listdir(path)) == 12)):
-      tkMessageBox.showwarning(title="Error", message="That username is already in use.")
+   if '' in read_fields():
+      tkMessageBox.showwarning(title="Error", message="Please enter valid user information before taking photos")
+   else:
+      path = os.getcwd() + "/../../data/" + pw + "/"
+      if(os.path.isdir(path) == False):
+         os.mkdir(path)
+      elif((os.path.isdir(path) == True) and (len(os.listdir(path)) == 12)):
+         tkMessageBox.showwarning(title="Error", message="That username is already in use.")
 
-   crop_img = crop_frame(frame)
-   cur=len(os.listdir(path)) #this will access the file system where the pictures are and find how
-   #many have been taken
-   if(cur<12):
-      #Store photo in the folder
-      cv2.imwrite(path + str(cur) + ".pgm", crop_img)
+      crop_img = crop_frame(frame)
+      cur=len(os.listdir(path)) #this will access the file system where the pictures
+      #are and find out how many have been taken
+      if(cur<12):
+         #Store photo in the folder
+         cv2.imwrite(path + str(cur) + ".pgm", crop_img)
 
 def clean_data(db):
-   #TODO: Delete all the partially full image folders or ones that are no longer in the database.
-   pass
+   #Delete all the partially full image folders or ones that are no longer in the database.
+   for entry in os.listdir(os.getcwd()):
+      if(os.path.isdir(entry)):
+         shutil.rmtree((os.getcwd()) + str(entry))
+         
+   data_path = os.getcwd() + "/../../data/"
+   for entry in os.listdir(data_path):
+      if(os.path.isdir(str(data_path) + str(entry))):
+         if(len(os.listdir(str(data_path) + str(entry))) < 12):
+            shutil.rmtree(str(data_path) + str(entry))
+      else:
+         os.remove(str(data_path) + str(entry))
+
+      if(db.getUser(entry) == ()):
+         shutil.rmtree(str(data_path) + str(entry))
+      
 
 def configure_main_window():
    '''
@@ -210,7 +228,7 @@ def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
    delete_btn = tk.Button(master=root, command=lambda:delete_entry(db_list.curselection(), db, db_list), background="Orange", width=15, text="Delete Selection")
    delete_btn.grid(row=6, column=4)
    
-   quit_btn = tk.Button(master=root, command=lambda:quit(root, p), background="Red", width=15, text="Quit")
+   quit_btn = tk.Button(master=root, command=lambda:quit(root, p, db), background="Red", width=15, text="Quit")
    quit_btn.grid(row=7, column=4)
 
    capture_btn = tk.Button(master=root, command=lambda:child.send(True), background="#7777FF", text="Take a picture!")
@@ -221,10 +239,13 @@ def auth_admin(root, process, db):
    auth = tk.Toplevel(bg="#EE8")
    auth.title("Admin authentication")
    auth.geometry("500x425")
-   auth.protocol('WM_DELETE_WINDOW', lambda:quit(root, p))
+   auth.protocol('WM_DELETE_WINDOW', lambda:quit(root, p, db))
 
-   last = open("lastlogin.txt", "r")
-   last_str = last.read().split()
+   try:
+      last = open("lastlogin.txt", "r")
+      last_str = last.read().split()
+   except:
+      last_str = ''
    
    msg = tk.Label(auth, bg="#EE8", text="Please enter your credentials and the hostname you wish to connect to.")
    msg.pack(pady=10)
@@ -247,7 +268,9 @@ def auth_admin(root, process, db):
    dbhost_entry = tk.Entry(auth, width=15)
    dbhost_entry.pack(pady=10)
 
-   if(len(last_str) == 2):
+   if(last_str == ''):
+      pass
+   elif(len(last_str) == 2):
       dbu_entry.insert(0, last_str[0])
       dbhost_entry.insert(0, last_str[1])
    elif(len(last_str) == 3):
@@ -259,7 +282,7 @@ def auth_admin(root, process, db):
    auth_btn = tk.Button(auth, text="Authenticate", command=lambda:authorize(auth, root, db, dbhost_entry.get(), dbu_entry.get(), dbpw_entry.get()))
    auth_btn.pack(pady=10)
 
-   cancel_btn = tk.Button(auth, text="Cancel", command=lambda:quit(root, p))
+   cancel_btn = tk.Button(auth, text="Cancel", command=lambda:quit(root, p, db))
    cancel_btn.pack(pady=10)
 
 def authorize(window, root, db, host, username, pw):
@@ -290,12 +313,12 @@ def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid username.")
    elif(flag == 1 and pw_entry.get() == ''):
       tkMessageBox.showwarning(title="Error", message="Please enter a valid password.")
-   elif((' ' in fn_entry.get()) or (' ' in ln_entry.get()) or (' ' in pw_entry).get()):
+   elif(' ' in str(fn_entry.get())) or (' ' in str(ln_entry.get())) or (' ' in str(pw_entry.get())):
       tkMessageBox.showwarning(title="Error", message="Spaces are not allowed in login information.")
    else:
       #Add user
       if(flag == 0):
-         path = os.getcwd() + "/../data/" + pw_entry.get() + "/"
+         path = os.getcwd() + "/../../data/" + pw_entry.get() + "/"
          if(os.path.isdir(path) == False):
             tkMessageBox.showwarning(title="Error", message="Please take some pictures to associate with the new user.")
          elif(len(os.listdir(path)) < 12):
@@ -313,10 +336,14 @@ def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
       ln_entry.delete(0, 'end')
       pw_entry.delete(0, 'end')
 
-def quit(root, process):
+def quit(root, process, db):
    '''
    Kills the GUI and the related video feed process.
    '''
+   try:
+      clean_data(db)
+   except:
+      pass
    process.terminate()
    root.destroy()
 
@@ -341,5 +368,5 @@ if __name__== '__main__':
    p.start()
    root.withdraw()
    auth_admin(root, p, db)
-   root.protocol('WM_DELETE_WINDOW', lambda:quit(root, p))
+   root.protocol('WM_DELETE_WINDOW', lambda:quit(root, p, db))
    root.mainloop()
