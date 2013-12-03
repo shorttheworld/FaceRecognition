@@ -2,7 +2,7 @@
 
 # Hannah's vesion of the gui
 
-import os
+import os,time,random
 import shutil
 
 import cv2
@@ -17,7 +17,10 @@ import tkFont
 
 from video import create_capture
 
-from FaceRecognizer import *
+from FaceRecognizer import FaceRecognizer
+enter_button = None 
+q = Queue()
+learner = FaceRecognizer()
 
 # tkinter GUI functions ---------------------------------------------------------
 def update_video_feed(image_label, frame):
@@ -38,7 +41,20 @@ def update_all(image_label, queue):
    frame = queue.get()
    update_video_feed(image_label, frame)
    root.after(0, func=lambda: update_all(image_label, queue))
-
+   
+def rec(imageQ,resultQ):
+   print "Recognition started"
+   name = learner.result()
+   resultQ.put(name)
+   print "Done executing"
+   # (state,name) = learner.testLearner(q)
+   # q = Queue()
+   # if(state == 'found'):
+		# enter_button.config(state='active')
+		# lf_label.config(bg='green', text='Detected: ' + name)
+   # else:
+		# enter_button.config(state='active')
+		# lf_label.config(bg='red', text='User not matched: ')	
 def quit(root, process):
    '''
    Kills the GUI and the related video feed process.
@@ -83,16 +99,17 @@ def start_detection(queue, image_label, lf, lf_label):
    Runs the detection algorithm and grabs multiple frames for the recognizer to compare.
    '''
    configure_folders()
-
-   cascade_fn = "../metadata/haarcascade_frontalface_alt.xml"
+   global enter_button
+   global q
+   enter_button.config(state='disabled')
+   cascade_fn = "../../metadata/haarcascade_frontalface_alt.xml"
    cascade = cv2.CascadeClassifier(cascade_fn)
-   
+   aQ = Queue()
    max_capture_attempts = 50
    num_pics_required = 30
    configure_folders()
    for i in range (0, max_capture_attempts):
       frame = queue.get()
-
       update_video_feed(image_label, frame)
       detect_face(frame, cascade)
       update_labels(lf, lf_label, num_pics_required)
@@ -100,12 +117,16 @@ def start_detection(queue, image_label, lf, lf_label):
       print i
 
       if (num_pics_captured() == 30):
+         print "Started new pricess"
+         p = Process(target = rec,args=(aQ,q))
+         p.start()
          break;
 
 def detect_face(frame, cascade):
    '''
    Attempts to detect a face in the video feed.
    '''
+   global q
    img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
    #img = cv2.equalizeHist(gray)
 
@@ -120,12 +141,15 @@ def detect_face(frame, cascade):
       #Hannah: :D this if statement is required, It checks to see if the image dimensions are correct :D
       if len(crop_img) == 224 and len(crop_img[0]) == 184:
          crop_img = cv2.resize(crop_img,(92,112))
-         cv2.imwrite("victim/" + str(num_pics_captured()) + ".pgm" , crop_img)  
+         # q.put(crop_img)
+         cv2.imwrite("victim/" + str(num_pics_captured()) + ".pgm" , crop_img)
+         # print "writing victim"
 
 def update_labels(lf, lf_label, num_pics_required):
    '''
    Updates the labels to remain current with the face detection.
    '''
+   global enter_button
    num_pics = num_pics_captured()
    lf_color = lf['bg']
 
@@ -135,12 +159,13 @@ def update_labels(lf, lf_label, num_pics_required):
       root.update()
    elif (lf_color != 'yellow' and 0 < num_pics and num_pics < num_pics_required-1):
       lf.config(bg='yellow')
-      lf_label.config(bg='yellow', text='Matching face.')
+      lf_label.config(bg='yellow', text='Capturing faces..')
       root.update()
    elif (lf_color != 'green' and num_pics == num_pics_required-1):
-      lf.config(bg='green')
-      lf_label.config(bg='green', text='Detected: ' + recognize_face())
+      lf.config(bg='yellow')
+      lf_label.config(bg='yellow', text='Running recognition')
       root.update()
+	  
 
 def recognize_face():
    '''
@@ -149,7 +174,7 @@ def recognize_face():
    # Saman: add face recognizer here
    # Hannah: Done!
    
-   recognizer = FaceRecognizer.FaceRecognizer()
+   recognizer = FaceRecognizer()
    name = recognizer.result()
    #name = ":D"
 
@@ -170,7 +195,7 @@ def setup_db():
    Establishes a connection to the locally hosted database for user authentication.
    '''
    # mysql -u root -p FacialRecognition; root
-   mySQL = MySQLdb.connect(host="localhost", user="root", passwd="root", db="FacialRecognition") 
+   mySQL = MySQLdb.connect() 
    db = mySQL.cursor() 
 
 def get_name(db, password):
@@ -209,7 +234,7 @@ def configure_welcome_banner():
    welcome_frame = tk.LabelFrame(master=root, relief="ridge", bg='black')
    welcome_frame.grid(row=0, column=1, columnspan=2)
    
-   welcome_message = 'Welcome to the In Yo Face Authentication System!'
+   welcome_message = 'In Yo Face Authentication System'
    welcome_label = tk.Label(master=welcome_frame, text=welcome_message, font=welcome_font)
    welcome_label.grid(row=0, column=1, columnspan=2)
 
@@ -252,14 +277,14 @@ def configure_buttons(queue, image_label, lf, lf_label):
    entry = tk.Entry(master=root, show='*', bg='white', fg='black', takefocus=1, width=30)
    entry.grid(row=4, column=1, sticky="n")
    
-   enter_button = tk.Button(master=root, text='Enter', command=lambda: 
+   enter_button = tk.Button(master=root, text='Enter', state ='active',command=lambda: 
       start_detection(queue, image_label, lf, lf_label), bg='green', width=25, height=1)
    enter_button.grid(row=4, column=1)
-
+   
    quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root, p), bg='red', width=25, height=1)
    quit_button.grid(row=4, column=1, sticky="s")
 
-   return entry
+   return enter_button
 
 # Bash commands -----------------------------------------------------------------
 def sh(script):
@@ -268,14 +293,31 @@ def sh(script):
    '''
    os.system("bash -c '%s'" % script)
 
+def resultUpdate(root,enterbutton,lf,lf_label):
+   print "In random"
+   global q
+   try:
+      data = q.get(block=False)
+      print data
+      if(enterbutton["state"]=="disabled"):
+         enterbutton["state"] = 'active'
+   except:
+      pass
+	  
+   root.after(1000,lambda: resultUpdate(root,enterbutton,lf,lf_label))
+   # if(enterbutton["state"]=="active"):
+      # enterbutton["state"] = 'disabled'
+   # else:
+      # enterbutton["state"] = "active"
 # Main method -------------------------------------------------------------------
 if __name__ == '__main__':
    '''
    Main method. Configures all parts of the GUI as well as the video feed process, then calls the main loop.
    '''
+   enter_button = None
    queue = Queue()
    root = tk.Tk()
-
+   
    p = Process(target=video_feed, args=(queue,))
 
    #db = setup_db()
@@ -284,9 +326,10 @@ if __name__ == '__main__':
    configure_welcome_banner()
    configure_folders()
 
-   lf, lf_label = configure_labels()
+   (lf,lf_label) = configure_labels()
    image_label = configure_image_window(queue)
-   entry = configure_buttons(queue, image_label, lf, lf_label)
+   enter_button = configure_buttons(queue, image_label, lf, lf_label)
    
    p.start()
+   resultUpdate(root,enter_button,lf,lf_label)
    root.mainloop()
