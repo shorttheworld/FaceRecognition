@@ -11,6 +11,7 @@ from Queue import Empty
 
 from multiprocessing import Process, Queue, Pipe
 from video import create_capture
+import learnerGenerator
 
 import time
 import server
@@ -176,7 +177,10 @@ def delete_entry(curSelection, db, db_list):
          if mode == 0:
             (fn, ln, pw) = cur.split()
             db.deleteUser(pw)
-            shutil.rmtree(str(os.getcwd()) + "/../../data/"+pw+"/")
+            try:
+               shutil.rmtree(str(os.getcwd()) + "/../../data/"+pw+"/")
+            except:
+               pass
             refresh(0, db_list)
          if mode == 1:
             (username, pw) = cur.split()
@@ -202,8 +206,8 @@ def refresh(mode, db_list):
       db_list.delete(0, db_list.size())
       db_list.insert(0, "USERS - FIRSTNAME    LASTNAME    USERNAME")
       try:
-         for (fn, ln, pw) in user_list:
-            db_list.insert(db_list.size(), fn + " " + ln + " " + pw)
+         for (fn, ln, user) in user_list:
+            db_list.insert(db_list.size(), fn + " " + ln + " " + user)
       except(TypeError):
          pass
    if mode == 1:
@@ -338,6 +342,7 @@ def quit(root, process, db):
       clean_data(db)
    except:
       pass
+   learnerGenerator.createLearner()
    process.terminate()
    root.destroy()
 

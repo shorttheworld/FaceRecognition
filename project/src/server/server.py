@@ -28,9 +28,9 @@ class Server:
 		self.db=SQL.connect(host=host, user=user,passwd=passwd,db='inyoface', port=3306)
 		self.cursor=self.db.cursor()
 		
-	def addUser(self, fn, ln, username):
-		sql="INSERT INTO user (FIRST_NAME, LAST_NAME, USERNAME) VALUES (%s,%s, %s)"
-		self.cursor.execute(sql, (fn,ln,username))
+	def addUser(self, fn, ln, username, active=1):
+		sql="INSERT INTO user (FIRST_NAME, LAST_NAME, USERNAME, ACTIVE) VALUES (%s,%s, %s, %s)"
+		self.cursor.execute(sql, (fn,ln,username,active))
 		self.db.commit()
 		
 	def deleteUser(self, username):
@@ -47,9 +47,15 @@ class Server:
 		sql="DELETE FROM admin WHERE USERNAME='"+user+"'"
 		self.cursor.execute(sql)
 		self.db.commit()
+
+        def getMapping(self):
+		sql="SELECT user_index,username FROM user"
+		self.cursor.execute(sql)
+		self.db.commit()
+		return self.cursor.fetchall()
 		
 	def getUsers(self):
-		sql="SELECT * FROM user"
+		sql="SELECT first_name,last_name,username FROM user"
 		self.cursor.execute(sql)
 		self.db.commit()
 		return self.cursor.fetchall()
