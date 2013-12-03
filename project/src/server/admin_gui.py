@@ -166,6 +166,7 @@ def configure_db_list():
    adminmode_btn = tk.Button(master=root, text="Admins", width=20, command=lambda:switch_mode(1, db_list))
    adminmode_btn.grid(row=9, column=8)
    scrollbar.config(command=db_list.yview)
+   refresh(0, db_list)
    return db_list
 
 def delete_entry(curSelection, db, db_list):
@@ -175,6 +176,7 @@ def delete_entry(curSelection, db, db_list):
          if mode == 0:
             (fn, ln, pw) = cur.split()
             db.deleteUser(pw)
+            shutil.rmtree(str(os.getcwd()) + "/../../data/"+pw+"/")
             refresh(0, db_list)
          if mode == 1:
             (username, pw) = cur.split()
@@ -198,7 +200,7 @@ def refresh(mode, db_list):
    if mode == 0:
       user_list = db.getUsers()
       db_list.delete(0, db_list.size())
-      db_list.insert(0, "FIRSTNAME    LASTNAME    USERNAME")
+      db_list.insert(0, "USERS - FIRSTNAME    LASTNAME    USERNAME")
       try:
          for (fn, ln, pw) in user_list:
             db_list.insert(db_list.size(), fn + " " + ln + " " + pw)
@@ -207,7 +209,7 @@ def refresh(mode, db_list):
    if mode == 1:
       admin_list = db.getAdmins()
       db_list.delete(0, db_list.size())
-      db_list.insert(0, "USERNAME    PASSWORD")
+      db_list.insert(0, "ADMINS - USERNAME    PASSWORD")
       try:
          for (username, pw) in admin_list:
             db_list.insert(db_list.size(), username + " " + pw)
@@ -253,7 +255,7 @@ def auth_admin(root, process, db):
    adminpw_label = tk.Label(auth, bg="#EE8", text = "Password")
    adminpw_label.pack(pady=10)
 
-   adminpw_entry = tk.Entry(auth, width=15)
+   adminpw_entry = tk.Entry(auth, width=15, show="*")
    adminpw_entry.pack(pady=10)
 
    try:
