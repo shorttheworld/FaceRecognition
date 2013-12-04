@@ -4,10 +4,15 @@ import MySQLdb as SQL
 
 
 class Server: 
-		
+	""""
+	Server class for handling connections to and from database
+	"""
 	def connect(self):
+		""""
+		Connect to the database using the file credentials stored in dbconfig.txt
+		"""
                 try:
-                      last = open("dbconfig.txt", "r")
+                      last = open("../../metadata/dbconfig.txt", "r")
                       last_str = last.read().split()
                 except:
                       last_str = ''
@@ -29,50 +34,77 @@ class Server:
 		self.cursor=self.db.cursor()
 		
 	def addUser(self, fn, ln, username, active=1):
+		"""
+		Add a user
+		"""
 		sql="INSERT INTO user (FIRST_NAME, LAST_NAME, USERNAME, ACTIVE) VALUES (%s,%s, %s, %s)"
 		self.cursor.execute(sql, (fn,ln,username,active))
 		self.db.commit()
 		
 	def deleteUser(self, username):
+		"""
+		Delete a user
+		"""
 		sql="DELETE FROM user WHERE USERNAME='"+username+"'"
 		self.cursor.execute(sql)
 		self.db.commit()
 	
 	def addAdmin(self,user, passwd):
+		"""
+		Add an admin
+		"""
 		sql="INSERT INTO admin (USERNAME, PASSWORD) VALUES (%s, %s)"
 		self.cursor.execute(sql, (user, passwd))
 		self.db.commit()
 		
 	def delAdmin(self, user):
+		"""
+		Delete an admin
+		"""
 		sql="DELETE FROM admin WHERE USERNAME='"+user+"'"
 		self.cursor.execute(sql)
 		self.db.commit()
 
-        def getMapping(self):
+    def getMapping(self):
+		"""
+		Get a mapping for the users to the file system
+		"""
 		sql="SELECT user_index,username FROM user"
 		self.cursor.execute(sql)
 		self.db.commit()
 		return self.cursor.fetchall()
 		
 	def getUsers(self):
+		"""
+		Get all the users
+		"""
 		sql="SELECT first_name,last_name,username FROM user"
 		self.cursor.execute(sql)
 		self.db.commit()
 		return self.cursor.fetchall()
 
 	def getUser(self, user):
+		"""
+		Get a specific User
+		"""
                 sql="SELECT * FROM user WHERE USERNAME='"+user+"'"
                 self.cursor.execute(sql)
                 self.db.commit()
                 return self.cursor.fetchall()
 		
 	def getAdmins(self):
+		"""
+		Get all the Admins
+		"""
 		sql="SELECT * FROM admin"
 		self.cursor.execute(sql)
 		self.db.commit()
 		return self.cursor.fetchall()
 
 	def getAdmin(self, user):
+		"""
+		Get a specific admin
+		"""
                 sql="SELECT * FROM admin WHERE USERNAME='"+user+"'"
                 self.cursor.execute(sql)
                 self.db.commit()
