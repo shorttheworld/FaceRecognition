@@ -1,11 +1,13 @@
 #Server Connections for Database
 
 import MySQLdb as SQL
+import hashlib
 
 
 class Server: 
 		
 	def connect(self):
+                
                 try:
                       last = open("../../metadata/dbconfig.txt", "r")
                       last_str = last.read().split()
@@ -28,6 +30,9 @@ class Server:
 		self.db=SQL.connect(host=host, user=user,passwd=passwd,db='inyoface', port=3306)
 		self.cursor=self.db.cursor()
 		
+		if(len(self.getAdmins()) == 0):
+                        self.addAdmin('admin', hashlib.sha512('tools').hexdigest())
+		
 	def addUser(self, fn, ln, username, active=1):
 		sql="INSERT INTO user (FIRST_NAME, LAST_NAME, USERNAME, ACTIVE) VALUES (%s,%s, %s, %s)"
 		self.cursor.execute(sql, (fn,ln,username,active))
@@ -39,7 +44,7 @@ class Server:
 		self.db.commit()
 	
 	def addAdmin(self,user, passwd):
-		sql="INSERT INTO admin (USERNAME, PASSWORD) VALUES (%s, %s)"
+		sql="INSERT INTO admin (USERNAME, PASS_HASH) VALUES (%s, %s)"
 		self.cursor.execute(sql, (user, passwd))
 		self.db.commit()
 		
@@ -49,13 +54,13 @@ class Server:
 		self.db.commit()
 
         def getMapping(self):
-		sql="SELECT user_index,username FROM user"
+		sql="SELECT USER_INDEX,USERNAME FROM user"
 		self.cursor.execute(sql)
 		self.db.commit()
 		return self.cursor.fetchall()
 		
 	def getUsers(self):
-		sql="SELECT first_name,last_name,username FROM user"
+		sql="SELECT FIRST_NAME,LAST_NAME,USERNAME FROM user"
 		self.cursor.execute(sql)
 		self.db.commit()
 		return self.cursor.fetchall()
