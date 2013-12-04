@@ -12,6 +12,7 @@ from Queue import Empty
 from multiprocessing import Process, Queue, Pipe
 from video import create_capture
 import learnerGenerator
+import FTPLearner
 
 import time
 import server
@@ -412,6 +413,9 @@ def quit(root, process, db):
       pass
    #Make a new learner
    learnerGenerator.createLearner()
+   #Push new learner to the FTP server
+   ftp = FTPLearner.FTPLearner()
+   ftp.pushLearner()
    process.terminate()
    root.destroy()
 
