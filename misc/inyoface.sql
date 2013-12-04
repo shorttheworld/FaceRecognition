@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 17, 2013 at 11:25 PM
+-- Generation Time: Dec 04, 2013 at 04:48 PM
 -- Server version: 5.6.12-log
 -- PHP Version: 5.4.16
 
@@ -29,9 +29,8 @@ USE `inyoface`;
 --
 
 CREATE TABLE IF NOT EXISTS `admin` (
-  `USERNAME` varchar(65) NOT NULL,
-  `PASSWORD` varchar(8192) NOT NULL,
-  PRIMARY KEY (`USERNAME`),
+  `USERNAME` varchar(15) NOT NULL,
+  `PASS_HASH` varchar(255) NOT NULL,
   UNIQUE KEY `USERNAME` (`USERNAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -39,8 +38,8 @@ CREATE TABLE IF NOT EXISTS `admin` (
 -- Dumping data for table `admin`
 --
 
-INSERT INTO `admin` (`USERNAME`, `PASSWORD`) VALUES
-('scollestan', 'asdf');
+INSERT INTO `admin` (`USERNAME`, `PASS_HASH`) VALUES
+('Garcon', 'colliefarms1');
 
 -- --------------------------------------------------------
 
@@ -49,12 +48,21 @@ INSERT INTO `admin` (`USERNAME`, `PASSWORD`) VALUES
 --
 
 CREATE TABLE IF NOT EXISTS `user` (
-  `FIRST_NAME` varchar(255) NOT NULL,
-  `LAST_NAME` varchar(255) NOT NULL,
-  `PASSWORD` varchar(712) NOT NULL,
-  PRIMARY KEY (`PASSWORD`),
-  UNIQUE KEY `PASSWORD` (`PASSWORD`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `user_index` int(8) NOT NULL AUTO_INCREMENT,
+  `username` varchar(500) NOT NULL,
+  `first_name` varchar(500) NOT NULL,
+  `last_name` varchar(500) NOT NULL,
+  `active` int(1) NOT NULL,
+  PRIMARY KEY (`user_index`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=14 ;
+
+--
+-- Dumping data for table `user`
+--
+
+INSERT INTO `user` (`user_index`, `username`, `first_name`, `last_name`, `active`) VALUES
+(12, 'Rabkakbar', 'Akbar', 'Dhananni', 1),
+(13, 'Garcon', 'Chris', 'Adams', 1);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
