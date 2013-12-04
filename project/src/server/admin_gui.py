@@ -263,7 +263,7 @@ def auth_admin(root, process, db):
    adminpw_entry.pack(pady=10)
 
    try:
-      last = open("lastlogin.txt", "r")
+      last = open("../../metadata/lastlogin.txt", "r")
       last_str = last.read().split()
    except:
       last_str = ''
@@ -285,7 +285,7 @@ def authorize(window, root, db, username, pw):
    try:
       admin = db.getAdmin(username)
       if(pw == admin[0][1]):
-         with open("lastlogin.txt", "w") as last:
+         with open("../../metadata/lastlogin.txt", "w") as last:
             last.write(username + ' ' + pw)
          root.deiconify()
          window.destroy()

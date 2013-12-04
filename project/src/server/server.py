@@ -7,7 +7,7 @@ class Server:
 		
 	def connect(self):
                 try:
-                      last = open("dbconfig.txt", "r")
+                      last = open("../../metadata/dbconfig.txt", "r")
                       last_str = last.read().split()
                 except:
                       last_str = ''
