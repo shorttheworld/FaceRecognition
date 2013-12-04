@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 24, 2013 at 09:38 PM
+-- Generation Time: Dec 04, 2013 at 04:48 PM
 -- Server version: 5.6.12-log
 -- PHP Version: 5.4.16
 
@@ -29,9 +29,8 @@ USE `inyoface`;
 --
 
 CREATE TABLE IF NOT EXISTS `admin` (
-  `USERNAME` varchar(65) NOT NULL,
-  `PASS_HASH` varchar(8192) NOT NULL,
-  PRIMARY KEY (`USERNAME`),
+  `USERNAME` varchar(15) NOT NULL,
+  `PASS_HASH` varchar(255) NOT NULL,
   UNIQUE KEY `USERNAME` (`USERNAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -40,19 +39,7 @@ CREATE TABLE IF NOT EXISTS `admin` (
 --
 
 INSERT INTO `admin` (`USERNAME`, `PASS_HASH`) VALUES
-('scollestan', 'asdf');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `learner`
---
-
-CREATE TABLE IF NOT EXISTS `learner` (
-  `LEARNER` longblob NOT NULL,
-  `TIME_STAMP` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`TIME_STAMP`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+('Garcon', 'colliefarms1');
 
 -- --------------------------------------------------------
 
@@ -61,31 +48,21 @@ CREATE TABLE IF NOT EXISTS `learner` (
 --
 
 CREATE TABLE IF NOT EXISTS `user` (
-  `FIRST_NAME` varchar(20) NOT NULL,
-  `LAST_NAME` varchar(65) NOT NULL,
-  `USERNAME` varchar(65) NOT NULL,
-  PRIMARY KEY (`USERNAME`),
-  UNIQUE KEY `USERNAME_2` (`USERNAME`),
-  KEY `USERNAME` (`USERNAME`),
-  KEY `USERNAME_3` (`USERNAME`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `user_index` int(8) NOT NULL AUTO_INCREMENT,
+  `username` varchar(500) NOT NULL,
+  `first_name` varchar(500) NOT NULL,
+  `last_name` varchar(500) NOT NULL,
+  `active` int(1) NOT NULL,
+  PRIMARY KEY (`user_index`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=14 ;
 
 --
 -- Dumping data for table `user`
 --
 
-INSERT INTO `user` (`FIRST_NAME`, `LAST_NAME`, `USERNAME`) VALUES
-('Chris', 'Adams', '1234'),
-('asdffgh', 'asdfdfgh', 'asdfaswahd'),
-('TEST', 'ME', 'FYCGUIUYIYVBI'),
-('THIS', 'IS', 'GARCON'),
-('o0ikpjmln', 'jiopmnklm', 'iojkm lk'),
-('fcgvbhvujh', 'kjvuyvguyjhvg', 'ivhubiub'),
-('iopjkionjk', 'jiokjionk', 'joinjiounk'),
-('Solace', 'Collestan', 'scollestan'),
-('sadfasfdfg', 'sfgsdfghjhg', 'sdgfhfdsag'),
-('TEST', 'USER', 'tfrcyvukytychg'),
-('qwjuyixdfgrt', 'ezsfjk', 'zefrdk');
+INSERT INTO `user` (`user_index`, `username`, `first_name`, `last_name`, `active`) VALUES
+(12, 'Rabkakbar', 'Akbar', 'Dhananni', 1),
+(13, 'Garcon', 'Chris', 'Adams', 1);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
