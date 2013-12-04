@@ -9,10 +9,10 @@ class LearnerUpdater:
 		self.username, self.password, self.host=ftplogin.read().split()
 		ftplogin.close()
 		
-	def getLearner(self, host):
+	def getLearner(self):
 		self.connect()
 		self.ftp.retrbinary('RETR learner.xml', self.buffer)
-		file=open("../../metadata/learner.xml","a")
+		file=open("../../metadata/learner.xml","w")
 		for item in self.buff:
 			file.write(str(item))
 		file.close()
