@@ -304,6 +304,17 @@ def configure_buttons(queue, image_label, lf, lf_label):
    quit_button.grid(row=4, column=1, sticky="s")
 
    return enter_button
+   
+class TimedUpdater:
+	'''
+	Class that updates the learner.xml file at an interval
+	'''
+	def __init__(self,seconds):
+		self.updater=LearnerUpdater()
+		self.timer=Timer(seconds,self.begin)
+	def begin(self):
+		self.updater.getLearner()
+		self.timer.start()
 
 # Bash commands -----------------------------------------------------------------
 def sh(script):
@@ -311,12 +322,6 @@ def sh(script):
    Converts a string into a shell script.
    '''
    os.system("bash -c '%s'" % script)
-
-def updateLearner(timer=None):
-   updater = LearnerUpdater()
-   print "updating learner"
-   updater.getLearner()
-   timer.start()
    
 def resultUpdate(root,enterbutton,lf,lf_label):
    print "In random"
@@ -340,8 +345,8 @@ if __name__ == '__main__':
    queue = Queue()
    root = tk.Tk()
    
-   #timer = Timer(5,updateLearner)
-   #timer.start()
+   timedUpdater=TimedUpdater(5)
+   timedUpdater.begin()
    p = Process(target=video_feed, args=(queue,))
 
    
