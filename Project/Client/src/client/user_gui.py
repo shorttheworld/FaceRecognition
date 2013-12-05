@@ -306,15 +306,19 @@ def configure_buttons(queue, image_label, lf, lf_label):
    return enter_button
    
 class TimedUpdater:
-	'''
-	Class that updates the learner.xml file at an interval
-	'''
-	def __init__(self,seconds):
-		self.updater=LearnerUpdater()
-		self.timer=Timer(seconds,self.begin)
-	def begin(self):
-		self.updater.getLearner()
-		self.timer.start()
+   '''
+   Class that updates the learner.xml file at an interval
+   '''
+   def __init__(self,seconds):
+      self.seconds=seconds
+      self.updater=LearnerUpdater()
+      self.timer=Timer(self.seconds,self.begin)
+   def begin(self):
+      self.updater.getLearner()
+      self.timer.cancel()
+      self.timer=Timer(self.seconds,self.begin)
+      self.timer.start()
+		
 
 # Bash commands -----------------------------------------------------------------
 def sh(script):
@@ -345,7 +349,7 @@ if __name__ == '__main__':
    queue = Queue()
    root = tk.Tk()
    
-   timedUpdater=TimedUpdater(5)
+   timedUpdater=TimedUpdater(30)  #Changed this parameter to change the interval at which we update
    timedUpdater.begin()
    p = Process(target=video_feed, args=(queue,))
 
