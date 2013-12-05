@@ -22,15 +22,14 @@ class FaceRecognizer:
         self.imageTable = dict(tup)
         if(os.path.isfile("../../metadata/learner.xml")):
                 self.learner.load("../../metadata/learner.xml")
-                self.retVal = self.testLearner(self.learner)
         else:
-			print "Learner not found, please make sure learner.xml is in the appropriate file"
+                print "Learner not found, please make sure learner.xml is in the appropriate file"
 
         
-    def testLearner(self,learner):
+    def testLearner(self,queue):
         peopleList = []
         confList = []
-
+        learner = self.learner
         recognizedPeople={}
             
         for image in os.listdir("victim/"):
@@ -46,12 +45,10 @@ class FaceRecognizer:
                     else:
                         recognizedPeople[peopleList[i]] = 1
 
-        result = ""
+        result = None
         if (0 < len(recognizedPeople)):
             result = max(recognizedPeople, key=recognizedPeople.get)
 
-        return result
-    def result(self):
-        return self.retVal
+        queue.put(result)
 
 

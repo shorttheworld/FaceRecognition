@@ -45,4 +45,4 @@ def extractData(path,map):
 	return [X,Y] 
 	
 #Uncomment the line below if you want this script to run from terminal	
-createLearner()
+#createLearner()

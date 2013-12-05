@@ -14,7 +14,8 @@ from Queue import Empty
 from PIL import Image, ImageTk
 import Tkinter as tk
 import tkFont
-
+from LearnerUpdater import LearnerUpdater
+from threading import Timer
 from video import create_capture
 
 from FaceRecognizer import FaceRecognizer
@@ -44,8 +45,7 @@ def update_all(image_label, queue):
    
 def rec(imageQ,resultQ):
    print "Recognition started"
-   name = learner.result()
-   resultQ.put(name)
+   name = learner.testLearner(resultQ)
    print "Done executing"
    # (state,name) = learner.testLearner(q)
    # q = Queue()
@@ -101,7 +101,7 @@ def start_detection(queue, image_label, lf, lf_label):
    configure_folders()
    global enter_button
    global q
-   enter_button.config(state='disabled')
+   #enter_button.config(state='disabled')
    cascade_fn = "../../metadata/haarcascade_frontalface_alt.xml"
    cascade = cv2.CascadeClassifier(cascade_fn)
    aQ = Queue()
@@ -293,22 +293,25 @@ def sh(script):
    '''
    os.system("bash -c '%s'" % script)
 
+def updateLearner(timer=None):
+   updater = LearnerUpdater()
+   print "updating learner"
+   updater.getLearner()
+   timer.start()
+   
 def resultUpdate(root,enterbutton,lf,lf_label):
    print "In random"
    global q
    try:
       data = q.get(block=False)
       print data
-      if(enterbutton["state"]=="disabled"):
-         enterbutton["state"] = 'active'
+      #if(enterbutton["state"]=="disabled"):
+         #enterbutton["state"] = 'active'
    except:
       pass
 	  
    root.after(1000,lambda: resultUpdate(root,enterbutton,lf,lf_label))
-   # if(enterbutton["state"]=="active"):
-      # enterbutton["state"] = 'disabled'
-   # else:
-      # enterbutton["state"] = "active"
+
 # Main method -------------------------------------------------------------------
 if __name__ == '__main__':
    '''
@@ -318,10 +321,13 @@ if __name__ == '__main__':
    queue = Queue()
    root = tk.Tk()
    
+   timer = Timer(5,updateLearner)
+   timer.start()
    p = Process(target=video_feed, args=(queue,))
 
+   
    #db = setup_db()
-
+   p2.start()
    configure_main_window()
    configure_welcome_banner()
    configure_folders()

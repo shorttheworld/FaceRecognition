@@ -66,7 +66,7 @@ def update_video_feed(image_label, frame):
    image_label._image_cache = b  # avoid garbage collection
    root.update()
 
-def update_all(image_label, queue, parent):
+def update_all(image_label, queue, parent, cap_btn):
    '''
    Recursively updates the entire GUI after each frame.
    '''
@@ -77,12 +77,12 @@ def update_all(image_label, queue, parent):
       #Check for a frame capture request from the pipe
       if(parent.poll()):
          parent.recv()
-         snap_pics(frame, pw)
-      root.after(0, func=lambda: update_all(image_label, queue, parent))
+         snap_pics(frame, pw, cap_btn)
+      root.after(0, func=lambda: update_all(image_label, queue, parent, cap_btn))
    except Exception:
       pass
 
-def snap_pics(frame, pw):
+def snap_pics(frame, pw, cap_btn):
    '''
    Takes a picture from the video feed and stores it in the filesystem.
    '''
@@ -97,12 +97,73 @@ def snap_pics(frame, pw):
       elif((os.path.isdir(path) == True) and (len(os.listdir(path)) == 12)):
          tkMessageBox.showwarning(title="Error", message="That username is already in use.")
 
-      crop_img = crop_frame(frame)
-      cur=len(os.listdir(path)) #this will access the file system where the pictures
+      detect_face(frame, path, cap_btn)
+      
+      #cur=len(os.listdir(path)) #this will access the file system where the pictures
       #are and find out how many have been taken
-      if(cur<12):
+      #if(cur<12):
          #Store photo in the folder
-         cv2.imwrite(path + str(cur) + ".pgm", crop_img)
+         #cv2.imwrite(path + str(cur) + ".pgm", crop_img)
+
+
+def start_detection(queue, image_label, lf, lf_label):
+   '''
+   Runs the detection algorithm and grabs multiple frames for the recognizer to compare.
+   '''
+   configure_folders()
+   global enter_button
+   global q
+   enter_button.config(state='disabled')
+   cascade_fn = "../../metadata/haarcascade_frontalface_alt.xml"
+   cascade = cv2.CascadeClassifier(cascade_fn)
+   aQ = Queue()
+   max_capture_attempts = 50
+   num_pics_required = 30
+   configure_folders()
+   for i in range (0, max_capture_attempts):
+      frame = queue.get()
+      update_video_feed(image_label, frame)
+      detect_face(frame, cascade)
+      update_labels(lf, lf_label, num_pics_required)
+
+
+      if (num_pics_captured() == 30):
+         print "Started new pricess"
+         p = Process(target = rec,args=(aQ,q))
+         p.start()
+         break;
+
+def detect_face(frame, path, cap_btn):
+   '''
+   Attempts to detect a face in the video feed.
+   '''
+   cascade_fn = "../../metadata/haarcascade_frontalface_alt.xml"
+   cascade = cv2.CascadeClassifier(cascade_fn)
+   img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+   #img = cv2.equalizeHist(gray)
+
+   # detectMultiScale is causing the video to slow down
+   rects = cascade.detectMultiScale(img, scaleFactor=1.3, minNeighbors=4, 
+      minSize=(30, 30), flags =cv2.CASCADE_SCALE_IMAGE) #CV_HAAR_SCALE_IMAGE
+
+   if len(rects) != 0:
+      # Can someone clean this line up and verify that I didn't mess it up? It's a bit hacky
+      crop_img = img[(rects[0][1]-20):(rects[0][1] + 204), (rects[0][0]-5):(rects[0][0]+179)]
+
+      #Hannah: :D this if statement is required, It checks to see if the image dimensions are correct :D
+      success = False
+      while((success == False) and (len(os.listdir(path)) < 12)):
+         if len(crop_img) == 224 and len(crop_img[0]) == 184:
+            crop_img = cv2.resize(crop_img,(92,112))
+            cv2.imwrite(path + str(len(os.listdir(path))) + ".pgm" , crop_img)
+            try:
+               cap_btn.config(text="Take a picture! (" + str(len(os.listdir(path))) + ")")
+            except Exception:
+               tkMessageBox.showwarning(title="Error", message="Couldn't find the button...")
+            success = True
+      return success
+
 
 
 #Authorization functions
@@ -170,7 +231,7 @@ def authorize(window, root, db, username, pw):
 
 #Database Functions
 #------------------------------------------------------
-def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
+def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list, cap_btn):
    '''
    Checks fields for entry, then makes a sql query with the user input.
    Also allows the user to interface with the database table directly.
@@ -200,6 +261,7 @@ def add_entry(fn_entry, ln_entry, pw_entry, flag, db, db_list):
          else:
             #Give text field input to the database to create a new user
             db.addUser(fn_entry.get(), ln_entry.get(), pw_entry.get())
+            cap_btn.config(text="Take a picture! (0)")
             switch_mode(0, db_list)
       #Add admin
       elif(flag == 1):
@@ -272,7 +334,7 @@ def configure_fields():
 
    return (fn_entry, ln_entry, pw_entry)
 
-def configure_image_window(queue, parent):
+def configure_image_window(queue, parent, cap_btn):
    '''
    Configures the image window for the video feed.
    '''
@@ -280,7 +342,7 @@ def configure_image_window(queue, parent):
    image_label = tk.Label(master=root)
    image_label.grid(row=3, column=0, rowspan=5,)
 
-   root.after(0, func=lambda: update_all(image_label, queue, parent))
+   root.after(0, func=lambda: update_all(image_label, queue, parent, cap_btn))
 
 def configure_db_list():
    '''
@@ -312,12 +374,17 @@ def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
    '''
    Configures the buttons that allow user interactivity.
    '''
+   #Take a picture
+   userpath = os.getcwd() + "/../../data/" + pw_entry.get()
+   capture_btn = tk.Button(master=root, command=lambda:child.send(True), background="#7777FF", text="Take a picture! (0)", width=20)
+   capture_btn.grid(row=9, column=0)
+   
    #Add user
-   adduser_btn = tk.Button(master=root, command=lambda:add_entry(fn_entry, ln_entry, pw_entry, 0, db, db_list), background="Green", width=15, text="Add User")
+   adduser_btn = tk.Button(master=root, command=lambda:add_entry(fn_entry, ln_entry, pw_entry, 0, db, db_list, capture_btn), background="Green", width=15, text="Add User")
    adduser_btn.grid(row=6, column=3)
 
    #Add admin
-   addadmin_btn = tk.Button(master=root, command=lambda:add_entry(fn_entry, ln_entry, pw_entry, 1, db, db_list), background="#44DDDD", width=15, text="Add Admin")
+   addadmin_btn = tk.Button(master=root, command=lambda:add_entry(fn_entry, ln_entry, pw_entry, 1, db, db_list, capture_btn), background="#44DDDD", width=15, text="Add Admin")
    addadmin_btn.grid(row=7, column=3)
 
    #Delete selection
@@ -328,9 +395,7 @@ def configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list):
    quit_btn = tk.Button(master=root, command=lambda:quit(root, p, db), background="#EE5555", width=15, text="Quit")
    quit_btn.grid(row=7, column=4)
 
-   #Take a picture
-   capture_btn = tk.Button(master=root, command=lambda:child.send(True), background="#7777FF", text="Take a picture!")
-   capture_btn.grid(row=9, column=0)
+   return capture_btn
 
 #Misc Functions
 #------------------------------------------------------
@@ -411,11 +476,12 @@ def quit(root, process, db):
       clean_data(db)
    except:
       pass
-   #Make a new learner
-   learnerGenerator.createLearner()
-   #Push new learner to the FTP server
-   ftp = FTPLearner.FTPLearner()
-   ftp.pushLearner()
+   if(len(os.listdir(os.getcwd() + "/../../data/")) >= 2):
+      #Make a new learner
+      learnerGenerator.createLearner()
+      #Push new learner to the FTP server
+      ftp = FTPLearner.FTPLearner()
+      ftp.pushLearner()
    process.terminate()
    root.destroy()
 
@@ -432,11 +498,12 @@ if __name__== '__main__':
     
    configure_main_window()
    (fn_entry, ln_entry, pw_entry) = configure_fields()
-   configure_image_window(queue, parent)
+   #configure_image_window(queue, parent)
    db = server.Server()
    db.connect()
    db_list = configure_db_list()
-   configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list)
+   cap_btn = configure_buttons(fn_entry, ln_entry, pw_entry, db, queue, child, db_list)
+   configure_image_window(queue, parent, cap_btn)
    
    p.start()
    root.withdraw()

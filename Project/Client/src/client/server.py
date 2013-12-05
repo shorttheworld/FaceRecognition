@@ -65,14 +65,14 @@ class Server:
 		self.cursor.execute(sql)
 		self.db.commit()
 
-    def getMapping(self):
-		"""
-		Get a mapping for the users to the file system
-		"""
-		sql="SELECT user_index,username FROM user"
-		self.cursor.execute(sql)
-		self.db.commit()
-		return self.cursor.fetchall()
+        def getMapping(self):
+                """
+                Get a mapping for the users to the file system
+                """
+                sql="SELECT user_index,username FROM user"
+                self.cursor.execute(sql)
+                self.db.commit()
+                return self.cursor.fetchall()
 		
 	def getUsers(self):
 		"""

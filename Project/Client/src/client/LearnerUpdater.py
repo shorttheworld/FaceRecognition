@@ -17,6 +17,7 @@ class LearnerUpdater:
 			file.write(str(item))
 		file.close()
 		self.ftp.quit()
+		self.buff=[]
 		
 	def buffer(self, data):
 		self.buff.append(data)
