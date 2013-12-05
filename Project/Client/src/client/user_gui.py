@@ -14,10 +14,11 @@ from Queue import Empty
 from PIL import Image, ImageTk
 import Tkinter as tk
 import tkFont
+import tkMessageBox
 from LearnerUpdater import LearnerUpdater
 from threading import Timer
 from video import create_capture
-
+import server
 from FaceRecognizer import FaceRecognizer
 enter_button = None 
 q = Queue()
@@ -215,6 +216,25 @@ def sanitize_input(input):
    '''
    return True #To be implemented later if necessary
 
+def getUsername(queue, image_label, lf, lf_label, entry):
+   #getting the username from the gui
+   username = entry.get()
+   print "in get username"
+   if (username == ''):
+      tkMessageBox.showwarning(title="Error", message="Password cannot be left blank")
+   else:
+      #getting the active field of the specified username
+      db = server.Server()
+      db.connect()
+      validUser = db.getUser(username)
+
+      #validation
+      if (len(validUser) == 0):
+         tkMessageBox.showwarning(title="Error", message="Invalid user")
+      else:
+         start_detection(queue, image_label, lf, lf_label)
+
+         
 # Configure GUI components ------------------------------------------------------
 def configure_main_window():
    '''
@@ -277,8 +297,7 @@ def configure_buttons(queue, image_label, lf, lf_label):
    entry = tk.Entry(master=root, show='*', bg='white', fg='black', takefocus=1, width=30)
    entry.grid(row=4, column=1, sticky="n")
    
-   enter_button = tk.Button(master=root, text='Enter', state ='active',command=lambda: 
-      start_detection(queue, image_label, lf, lf_label), bg='green', width=25, height=1)
+   enter_button = tk.Button(master=root, text='Enter', state ='active',command=lambda: getUsername(queue, image_label, lf, lf_label, entry), bg='green', width=25, height=1)
    enter_button.grid(row=4, column=1)
    
    quit_button = tk.Button(master=root, text='Quit', command=lambda: quit(root, p), bg='red', width=25, height=1)
@@ -321,13 +340,13 @@ if __name__ == '__main__':
    queue = Queue()
    root = tk.Tk()
    
-   timer = Timer(5,updateLearner)
-   timer.start()
+   #timer = Timer(5,updateLearner)
+   #timer.start()
    p = Process(target=video_feed, args=(queue,))
 
    
    #db = setup_db()
-   p2.start()
+   #p2.start()
    configure_main_window()
    configure_welcome_banner()
    configure_folders()
