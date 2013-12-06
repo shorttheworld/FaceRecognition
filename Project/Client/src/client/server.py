@@ -82,7 +82,6 @@ class Server:
 		self.cursor.execute(sql)
 		self.db.commit()
 		return self.cursor.fetchall()
-
 	def getUser(self, user):
 		"""
 		Get a specific User
@@ -91,6 +90,26 @@ class Server:
                 self.cursor.execute(sql)
                 self.db.commit()
                 return self.cursor.fetchall()
+        def getUserInfo(self, username):
+                sql="SELECT first_name, last_name FROM user WHERE username=%s"
+                self.cursor.execute(sql, (username))
+                self.db.commit()
+                result = self.cursor.fetchall()[0]
+                return result[0] + " " + result[1]
+
+        def getUserActive(self, username):
+                """
+                Get a specific User
+                """
+                sql="SELECT active FROM user WHERE username=%s"
+                self.cursor.execute(sql, (username))
+                self.db.commit()
+                active = 0
+                try:
+                        active = self.cursor.fetchall()[0][0]
+                except:
+                        pass
+                return (active == 1) 
 		
 	def getAdmins(self):
 		"""

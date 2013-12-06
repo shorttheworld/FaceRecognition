@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-# Hannah's vesion of the gui
-
 import os,time,random
 import shutil
 
@@ -23,7 +21,7 @@ from FaceRecognizer import FaceRecognizer
 enter_button = None 
 q = Queue()
 learner = FaceRecognizer()
-
+status = 0
 # tkinter GUI functions ---------------------------------------------------------
 def update_video_feed(image_label, frame):
    '''
@@ -44,18 +42,14 @@ def update_all(image_label, queue):
    update_video_feed(image_label, frame)
    root.after(0, func=lambda: update_all(image_label, queue))
    
-def rec(imageQ,resultQ):
+def rec(resultQ,username):
    print "Recognition started"
-   name = learner.testLearner(resultQ)
-   print "Done executing"
-   # (state,name) = learner.testLearner(q)
-   # q = Queue()
-   # if(state == 'found'):
-		# enter_button.config(state='active')
-		# lf_label.config(bg='green', text='Detected: ' + name)
-   # else:
-		# enter_button.config(state='active')
-		# lf_label.config(bg='red', text='User not matched: ')	
+   global learner
+   #learner = FaceRecognizer()
+   a = username+""
+   val = learner.testLearner(resultQ,a)
+
+   
 def quit(root, process):
    '''
    Kills the GUI and the related video feed process.
@@ -95,7 +89,7 @@ def crop_frame(frame):
    return frame
 
 # Face detection ----------------------------------------------------------------
-def start_detection(queue, image_label, lf, lf_label):
+def start_detection(queue, image_label, lf, lf_label,username):
    '''
    Runs the detection algorithm and grabs multiple frames for the recognizer to compare.
    '''
@@ -105,8 +99,7 @@ def start_detection(queue, image_label, lf, lf_label):
    #enter_button.config(state='disabled')
    cascade_fn = "../../metadata/haarcascade_frontalface_alt.xml"
    cascade = cv2.CascadeClassifier(cascade_fn)
-   aQ = Queue()
-   max_capture_attempts = 50
+   max_capture_attempts = 80
    num_pics_required = 30
    configure_folders()
    for i in range (0, max_capture_attempts):
@@ -118,10 +111,15 @@ def start_detection(queue, image_label, lf, lf_label):
       print i
 
       if (num_pics_captured() == 30):
-         print "Started new pricess"
-         p = Process(target = rec,args=(aQ,q))
+         print "Started new process"
+         p = Process(target = rec,args=(q,username))
          p.start()
+         global status
+         status = 1
          break;
+   if(num_pics_captured() <30):
+      tkMessageBox.showwarning(title="Error", message="Please position in front of thecamera")
+      configure_folders()
 
 def detect_face(frame, cascade):
    '''
@@ -232,7 +230,7 @@ def getUsername(queue, image_label, lf, lf_label, entry):
       if (len(validUser) == 0):
          tkMessageBox.showwarning(title="Error", message="Invalid user")
       else:
-         start_detection(queue, image_label, lf, lf_label)
+         start_detection(queue, image_label, lf, lf_label,username)
 
          
 # Configure GUI components ------------------------------------------------------
@@ -328,16 +326,30 @@ def sh(script):
    os.system("bash -c '%s'" % script)
    
 def resultUpdate(root,enterbutton,lf,lf_label):
-   print "In random"
+   print "Inside update"
    global q
-   try:
-      data = q.get(block=False)
-      print data
-      #if(enterbutton["state"]=="disabled"):
-         #enterbutton["state"] = 'active'
-   except:
-      pass
-	  
+   global status
+   if status ==1:
+      try:
+         data = q.get(block=False)
+         print "printing data ",data
+         if(data[0]== True):
+            print"found"
+            lf.config(bg='green')
+            greet = 'Welcome ', data[1]
+            lf_label.config(bg='green', text=greet)
+            root.update()
+            #set label to green and print name
+            status = 0
+         else:
+            lf.config(bg='red')
+            print "not found ", data
+            lf_label.config(bg='red',text='User not found')
+            root.update()
+            status = 0
+      except:
+         pass
+         
    root.after(1000,lambda: resultUpdate(root,enterbutton,lf,lf_label))
 
 # Main method -------------------------------------------------------------------
@@ -349,8 +361,8 @@ if __name__ == '__main__':
    queue = Queue()
    root = tk.Tk()
    
-   timedUpdater=TimedUpdater(30)  #Changed this parameter to change the interval at which we update
-   timedUpdater.begin()
+   #timedUpdater=TimedUpdater(30)  #Changed this parameter to change the interval at which we update
+   #timedUpdater.begin()
    p = Process(target=video_feed, args=(queue,))
 
    
