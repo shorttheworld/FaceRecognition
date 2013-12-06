@@ -26,12 +26,12 @@ class FaceRecognizer:
                 print "Learner not found, please make sure learner.xml is in the appropriate file"
 
         
-    def testLearner(self,queue):
+    def testLearner(self,queue,username):
         peopleList = []
         confList = []
         learner = self.learner
         recognizedPeople={}
-            
+           
         for image in os.listdir("victim/"):
                 imgPath = os.path.join("victim/", image)
                 testImage = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
@@ -44,11 +44,28 @@ class FaceRecognizer:
                         recognizedPeople[peopleList[i]] = recognizedPeople[peopleList[i]] + 1
                     else:
                         recognizedPeople[peopleList[i]] = 1
+       
+        db = server.Server()
+        db.connect()
+       
+        success = False
 
-        result = None
-        if (0 < len(recognizedPeople)):
-            result = max(recognizedPeople, key=recognizedPeople.get)
+        recognizedPeopleRange = len(recognizedPeople)
+        if(recognizedPeopleRange > 5):
+            recognizedPeopleRange = 5
+        if recognizedPeopleRange > 0:
+            for i in range(recognizedPeopleRange):
+                result = max(recognizedPeople, key=recognizedPeople.get)
+                if result == username:
+                    success = True
+                    break
+                del recognizedPeople[result]
 
-        queue.put(result)
+            if success:
+                queue.put((db.getUserActive(username), db.getUserInfo(username)))
+                return
 
+        queue.put((False,))
 
+#l = FaceRecognizer()
+#l.testLearner("sada","asda")

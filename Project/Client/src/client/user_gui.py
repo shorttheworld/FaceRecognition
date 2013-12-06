@@ -43,7 +43,7 @@ def update_all(image_label, queue):
    root.after(0, func=lambda: update_all(image_label, queue))
    
 def rec(resultQ,username):
-   print "Recognition started"
+   #print "Recognition started"
    global learner
    #learner = FaceRecognizer()
    a = username+""
@@ -99,7 +99,7 @@ def start_detection(queue, image_label, lf, lf_label,username):
    #enter_button.config(state='disabled')
    cascade_fn = "../../metadata/haarcascade_frontalface_alt.xml"
    cascade = cv2.CascadeClassifier(cascade_fn)
-   max_capture_attempts = 80
+   max_capture_attempts = 160
    num_pics_required = 30
    configure_folders()
    for i in range (0, max_capture_attempts):
@@ -108,10 +108,10 @@ def start_detection(queue, image_label, lf, lf_label,username):
       detect_face(frame, cascade)
       update_labels(lf, lf_label, num_pics_required)
 
-      print i
+      #print i
 
       if (num_pics_captured() == 30):
-         print "Started new process"
+       #  print "Started new process"
          p = Process(target = rec,args=(q,username))
          p.start()
          global status
@@ -217,7 +217,7 @@ def sanitize_input(input):
 def getUsername(queue, image_label, lf, lf_label, entry):
    #getting the username from the gui
    username = entry.get()
-   print "in get username"
+   #print "in get username"
    if (username == ''):
       tkMessageBox.showwarning(title="Error", message="Password cannot be left blank")
    else:
@@ -326,15 +326,15 @@ def sh(script):
    os.system("bash -c '%s'" % script)
    
 def resultUpdate(root,enterbutton,lf,lf_label):
-   print "Inside update"
+   #print "Inside update"
    global q
    global status
    if status ==1:
       try:
          data = q.get(block=False)
-         print "printing data ",data
+         #print "printing data ",data
          if(data[0]== True):
-            print"found"
+            #print"found"
             lf.config(bg='green')
             greet = 'Welcome ', data[1]
             lf_label.config(bg='green', text=greet)
@@ -343,7 +343,7 @@ def resultUpdate(root,enterbutton,lf,lf_label):
             status = 0
          else:
             lf.config(bg='red')
-            print "not found ", data
+            #print "not found ", data
             lf_label.config(bg='red',text='User not found')
             root.update()
             status = 0

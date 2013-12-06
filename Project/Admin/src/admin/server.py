@@ -53,7 +53,7 @@ class Server:
 		"""
 		Add an admin
 		"""
-		sql="INSERT INTO admin (USERNAME, PASSWORD) VALUES (%s, %s)"
+		sql="INSERT INTO admin (USERNAME, PASS_HASH) VALUES (%s, %s)"
 		self.cursor.execute(sql, (user, passwd))
 		self.db.commit()
 		
